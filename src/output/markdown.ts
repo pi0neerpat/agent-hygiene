@@ -1,5 +1,5 @@
 import type { OverallScore, CategoryScore } from "../scoring/index.js";
-import type { DiscoveredAgent } from "../checks/types.js";
+import type { Check, DiscoveredAgent } from "../checks/types.js";
 import type { TrendAnalysis } from "../tracking/trends.js";
 
 /**
@@ -11,6 +11,7 @@ export function renderMarkdown(
   opts?: {
     trends?: TrendAnalysis | null;
     agentsViewAvailable?: boolean;
+    checks?: Check[];
   },
 ): string {
   const lines: string[] = [];
@@ -51,6 +52,25 @@ export function renderMarkdown(
       opts?.agentsViewAvailable ?? false,
     ),
   );
+
+  // Unsupported agents CTA
+  if (opts?.checks) {
+    const supportedIds = new Set(opts.checks.flatMap((c) => c.agents));
+    const unsupported = [...agents.values()].filter(
+      (a) => a.status !== "not-found" && !supportedIds.has(a.id),
+    );
+    if (unsupported.length > 0) {
+      lines.push("## Community");
+      lines.push("");
+      lines.push(
+        `${unsupported.map((a) => `**${a.name}**`).join(", ")} detected but no checks available yet.`,
+      );
+      lines.push(
+        `[Contribute checks for your agent](https://github.com/pi0neerpat/agent-hygiene/tree/main/contrib/add-agent-checks)`,
+      );
+      lines.push("");
+    }
+  }
 
   // Summary table
   lines.push("## Summary");

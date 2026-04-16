@@ -18,6 +18,8 @@ export const sessionLengthCheck: Check = {
   agents: ["claude-code"],
   estimatedSavings: "Shorter sessions avoid compounding token costs from stale context",
   weight: 5,
+  impact: "med",
+  fixPrompt: `Review my session habits and implement shorter, focused sessions. Add a rule to CLAUDE.md reminding me to use /clear between unrelated tasks. For days with heavy token usage, identify where I could have broken work into separate sessions. Set up a habit of starting each new task with a fresh context rather than continuing a long-running session.`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     const early = checkSessionDataAvailable(ctx);

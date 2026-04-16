@@ -11,6 +11,8 @@ export const mergeTinyRulesCheck: Check = {
   agents: ["claude-code"],
   estimatedSavings: "Reduces file overhead from many small rule files",
   weight: 4,
+  impact: "low",
+  fixPrompt: `Review the .claude/rules/ directory and merge small rule files (under 30 lines) that cover related topics into fewer, larger files. Each file incurs per-file loading overhead, so consolidating related rules reduces context waste. Group by domain — e.g., merge all testing-related rules into one file, all API conventions into another.`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     const rulesDir = join(ctx.projectDir, ".claude", "rules");

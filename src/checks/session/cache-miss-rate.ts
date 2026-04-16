@@ -18,6 +18,8 @@ export const cacheMissRateCheck: Check = {
   agents: ["claude-code"],
   estimatedSavings: "Prompt caching can reduce input costs by up to 90%",
   weight: 6,
+  impact: "med",
+  fixPrompt: `Improve my prompt cache hit rate. Ensure I'm using the latest Anthropic SDK version which supports automatic prompt caching. Check that my system prompts and CLAUDE.md are stable across turns — frequent changes invalidate the cache. If I'm using the API directly, add cache_control breakpoints to system messages that are reused across calls. Cached input tokens cost 90% less than uncached ones.`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     const early = checkSessionDataAvailable(ctx);

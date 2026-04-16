@@ -10,6 +10,8 @@ export const batchApiCheck: Check = {
   agents: ["claude-code", "cursor", "github-copilot"],
   estimatedSavings: "Batch API is 50% cheaper than real-time API",
   weight: 5,
+  impact: "med",
+  fixPrompt: `Identify any LLM API calls in the codebase that process multiple items and don't need real-time responses. Migrate these to the Anthropic Batch API for 50% cost savings. Look for patterns like Promise.all with messages.create, for-loops over API calls, or any bulk processing. The Batch API queues requests and returns results asynchronously — ideal for data processing, evaluation pipelines, and content generation.`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     // Look for indicators of batch-like workloads

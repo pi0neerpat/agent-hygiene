@@ -128,6 +128,7 @@ export const autocompactCheck: Check = {
   agents: ["claude-code"],
   estimatedSavings: "Prevents context overflow and re-reads",
   weight: 7,
+  impact: "high",
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     const varName = "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE";
@@ -195,6 +196,7 @@ export const subagentModelCheck: Check = {
   agents: ["claude-code"],
   estimatedSavings: "~60% cost reduction on exploration tasks",
   weight: 8,
+  impact: "high",
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     const varName = "CLAUDE_CODE_SUBAGENT_MODEL";

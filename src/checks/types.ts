@@ -2,6 +2,7 @@ import type { AgentsViewData } from "../tracking/agentsview.js";
 
 export type Tier = "auto" | "session" | "semi-auto" | "advisory";
 export type Category = "context" | "cost" | "habits" | "structure";
+export type Impact = "high" | "med" | "low";
 
 export interface CheckResult {
   passed: boolean;
@@ -59,6 +60,11 @@ export interface Check {
   agents: string[];
   estimatedSavings: string;
   weight: number;
+  /** Impact tier for fix menu ordering (high/med/low). */
+  impact: Impact;
   run(ctx: ScanContext): Promise<CheckResult>;
+  /** Automated fixer — mutates files/settings directly. */
   fix?(ctx: ScanContext): Promise<FixResult>;
+  /** Agent prompt for manual fixes — shown to user to copy into their AI agent. */
+  fixPrompt?: string;
 }

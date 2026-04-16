@@ -11,6 +11,8 @@ export const modelSelectionCheck: Check = {
   agents: ["claude-code", "cursor"],
   estimatedSavings: "Sonnet is ~5x cheaper than Opus per token",
   weight: 7,
+  impact: "high",
+  fixPrompt: `Change the default model from Opus to Sonnet. In ~/.claude/settings.json, set "model": "claude-sonnet-4-6". If CLAUDE_MODEL or ANTHROPIC_MODEL is set in your shell profile, update it to claude-sonnet-4-6. For Cursor, update the defaultModel in ~/.cursor/settings.json. Sonnet handles 90%+ of coding tasks at ~5x lower cost — use /model opus selectively for complex architecture and planning.`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     // Check Claude Code settings

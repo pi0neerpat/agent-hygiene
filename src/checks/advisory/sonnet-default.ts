@@ -25,6 +25,8 @@ export const sonnetDefaultCheck: Check = {
   estimatedSavings:
     "Sonnet handles ~90% of coding tasks at ~5x lower cost than Opus",
   weight: 4,
+  impact: "low",
+  fixPrompt: `Set Sonnet as the explicit default model to avoid pricier fallbacks. Add "model": "claude-sonnet-4-6" to ~/.claude/settings.json, or set ANTHROPIC_MODEL=claude-sonnet-4-6 in your shell profile. Sonnet handles the vast majority of coding tasks — file edits, refactors, test writing, debugging — at ~5x lower cost than Opus. Use /model opus selectively for complex architecture and planning sessions.`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     // 1. Check settings.json defaultModel / model field.

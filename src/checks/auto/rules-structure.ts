@@ -10,6 +10,8 @@ export const rulesStructureCheck: Check = {
   agents: ["claude-code"],
   estimatedSavings: "Only loads relevant rules per file, reducing context",
   weight: 6,
+  impact: "med",
+  fixPrompt: `Create a .claude/rules/ directory and add path-scoped rule files. Each file should be named with a glob pattern like "src/**/*.ts.md" or "tests/**/*.test.ts.md" so the rules only load when editing matching files. Move any file-type-specific conventions from CLAUDE.md into these scoped rules. For example, create .claude/rules/src__components.md for React component guidelines that only load when working in src/components/.`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     const rulesDir = join(ctx.projectDir, ".claude", "rules");

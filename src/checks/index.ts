@@ -10,6 +10,8 @@ import { mcpToolSearchCheck } from "./auto/mcp-tool-search.js";
 import { mergeTinyRulesCheck } from "./auto/merge-tiny-rules.js";
 import { modelSelectionCheck } from "./auto/model-selection.js";
 import { settingsSchemaCheck } from "./auto/settings-schema.js";
+import { agentsMdSizeCheck } from "./auto/agentsmd-size.js";
+import { codexSetupCheck } from "./auto/codex-setup.js";
 
 // Session checks (Tier 2) — requires AgentsView
 import { opusOveruseCheck } from "./session/opus-overuse.js";
@@ -43,6 +45,8 @@ export const ALL_CHECKS: Check[] = [
   mergeTinyRulesCheck,
   modelSelectionCheck,
   settingsSchemaCheck,
+  agentsMdSizeCheck,
+  codexSetupCheck,
 
   // Tier 2: Session data (AgentsView)
   opusOveruseCheck,

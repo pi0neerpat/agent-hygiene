@@ -10,6 +10,8 @@ export const claudemdSizeCheck: Check = {
   agents: ["claude-code"],
   estimatedSavings: "Reduces per-message context overhead",
   weight: 7,
+  impact: "high",
+  fixPrompt: `Review my CLAUDE.md and reduce it to under 80 lines. Identify sections containing domain-specific workflows, step-by-step instructions, or large code blocks and extract them into Claude Code skills in ~/.claude/skills/ or path-scoped rules in .claude/rules/. The global ~/.claude/CLAUDE.md should be under 15 lines — keep only cross-project settings there. CLAUDE.md should contain only project-level rules and conventions, not implementation guides.`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     const projectClaudeMd = await ctx.readFile(

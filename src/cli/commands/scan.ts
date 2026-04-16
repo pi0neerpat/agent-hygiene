@@ -112,6 +112,7 @@ export function registerScanCommand(program: Command): void {
             renderMarkdown(score, ctx.agents, {
               trends,
               agentsViewAvailable: ctx.agentsViewData?.available ?? false,
+              checks: ALL_CHECKS,
             }),
           );
           return;
@@ -121,6 +122,7 @@ export function registerScanCommand(program: Command): void {
           renderReport(score, ctx.agents, {
             agentsViewAvailable: ctx.agentsViewData?.available ?? false,
             trends,
+            checks: ALL_CHECKS,
           }),
         );
 

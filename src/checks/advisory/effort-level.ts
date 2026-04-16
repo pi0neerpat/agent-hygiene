@@ -10,6 +10,8 @@ export const effortLevelCheck: Check = {
   agents: ["claude-code"],
   estimatedSavings: "Lower effort = fewer reasoning tokens on simple tasks",
   weight: 4,
+  impact: "low",
+  fixPrompt: `Set a default effort level to reduce reasoning token consumption. Add "export CLAUDE_CODE_EFFORT=medium" to your shell profile (~/.zshrc or ~/.bashrc), or set it in ~/.claude/settings.json. Use "medium" for most tasks — it provides a good balance of quality and token efficiency. Only use "high" for complex architectural decisions or difficult debugging sessions.`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     // Check if effort level is configured via env var

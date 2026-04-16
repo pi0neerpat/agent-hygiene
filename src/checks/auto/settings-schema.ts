@@ -17,6 +17,7 @@ export const settingsSchemaCheck: Check = {
   agents: ["claude-code"],
   estimatedSavings: "Enables autocomplete and validation in your editor",
   weight: 3,
+  impact: "low",
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     const paths = [

@@ -58,6 +58,7 @@ export const claudeignoreCheck: Check = {
   agents: ["claude-code"],
   estimatedSavings: "30-40% context reduction",
   weight: 9,
+  impact: "high",
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     const content = await ctx.readFile(

@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import type { OverallScore, CategoryScore } from "../scoring/index.js";
-import type { DiscoveredAgent } from "../checks/types.js";
+import type { Check, DiscoveredAgent } from "../checks/types.js";
 import type { SnapshotComparison, Snapshot } from "../tracking/snapshots.js";
 import type { TrendAnalysis } from "../tracking/trends.js";
 
@@ -66,6 +66,7 @@ export function renderReport(
   opts?: {
     agentsViewAvailable?: boolean;
     trends?: TrendAnalysis | null;
+    checks?: Check[];
   },
 ): string {
   const lines: string[] = [];
@@ -96,13 +97,22 @@ export function renderReport(
     lines.push("");
   }
 
+  // Unsupported agents CTA
+  if (opts?.checks) {
+    const cta = renderUnsupportedAgentsCta(agents, opts.checks);
+    if (cta) {
+      lines.push(cta);
+      lines.push("");
+    }
+  }
+
   // AgentsView status
   lines.push(renderAgentsViewStatus(opts?.agentsViewAvailable ?? false));
 
   // Footer
   lines.push(
     chalk.dim(
-      "  Run with --fix to apply recommended changes.",
+      "  Run with --fix to apply fixes or get guided prompts for your agent.",
     ),
   );
   lines.push("");
@@ -137,6 +147,14 @@ function renderHeader(
   const fixableCount = score.categories.reduce(
     (n, cat) =>
       n +
+      cat.checks.filter(
+        (c) => !c.result.passed && (c.check.fix || c.check.fixPrompt),
+      ).length,
+    0,
+  );
+  const autoFixCount = score.categories.reduce(
+    (n, cat) =>
+      n +
       cat.checks.filter((c) => !c.result.passed && c.check.fix).length,
     0,
   );
@@ -160,8 +178,14 @@ function renderHeader(
   if (failCount > 0) {
     const issueWord = failCount === 1 ? "issue" : "issues";
     let summary = `${failCount} ${issueWord} found`;
-    if (fixableCount > 0) {
-      summary += chalk.dim(" · ") + chalk.cyan(`${fixableCount} auto-fixable`);
+    if (autoFixCount > 0) {
+      summary += chalk.dim(" · ") + chalk.cyan(`${autoFixCount} auto-fixable`);
+    }
+    if (fixableCount > autoFixCount) {
+      const promptCount = fixableCount - autoFixCount;
+      summary +=
+        chalk.dim(" · ") +
+        chalk.magenta(`${promptCount} with fix prompts`);
     }
     headerLines.push(boxLine(chalk.dim(summary)));
   } else {
@@ -246,7 +270,7 @@ function renderCategory(cat: CategoryScore): string {
 
 interface QuickWin {
   message: string;
-  fixable: boolean;
+  type: "auto-fix" | "prompt" | "info";
 }
 
 function collectQuickWins(score: OverallScore): QuickWin[] {
@@ -256,20 +280,17 @@ function collectQuickWins(score: OverallScore): QuickWin[] {
     for (const { check, result } of cat.checks) {
       if (result.passed) continue;
       if (check.tier === "advisory") continue;
-      // Only auto-tier checks qualify as "quick wins"
-      if (check.tier === "auto") {
-        wins.push({
-          message: result.message,
-          fixable: !!check.fix,
-        });
+      if (check.fix) {
+        wins.push({ message: result.message, type: "auto-fix" });
+      } else if (check.fixPrompt) {
+        wins.push({ message: result.message, type: "prompt" });
       }
     }
   }
 
-  // Fixable wins first (lower friction), then limit to 3
-  wins.sort((a, b) =>
-    a.fixable === b.fixable ? 0 : a.fixable ? -1 : 1,
-  );
+  // Auto-fixes first (lowest friction), then prompts, limit to 3
+  const order = { "auto-fix": 0, prompt: 1, info: 2 };
+  wins.sort((a, b) => order[a.type] - order[b.type]);
   return wins.slice(0, 3);
 }
 
@@ -285,10 +306,16 @@ function renderQuickWins(wins: QuickWin[]): string {
     const win = wins[i];
     const num = chalk.white(`${i + 1}.`);
     lines.push(`     ${num} ${win.message}`);
-    if (win.fixable) {
+    if (win.type === "auto-fix") {
       lines.push(
         chalk.dim(
           `        → run ${chalk.cyan("--fix")} to apply automatically`,
+        ),
+      );
+    } else if (win.type === "prompt") {
+      lines.push(
+        chalk.dim(
+          `        → run ${chalk.cyan("--fix")} to get a guided prompt`,
         ),
       );
     }
@@ -586,4 +613,36 @@ export function renderAgentDiscovery(
   }
 
   return lines.join("\n");
+}
+
+// ── Unsupported agents CTA ──────────────────────────────────────
+
+const CONTRIB_URL =
+  "https://github.com/pi0neerpat/agent-hygiene/tree/main/contrib/add-agent-checks";
+
+/**
+ * Derive which agent IDs have at least one check, then render a CTA
+ * for any detected agents that aren't covered.
+ */
+export function renderUnsupportedAgentsCta(
+  agents: Map<string, DiscoveredAgent>,
+  checks: Check[],
+): string | null {
+  const supportedIds = new Set(checks.flatMap((c) => c.agents));
+
+  const unsupported = [...agents.values()].filter(
+    (a) => a.status !== "not-found" && !supportedIds.has(a.id),
+  );
+
+  if (unsupported.length === 0) return null;
+
+  const names = unsupported.map((a) => chalk.white(a.name)).join(", ");
+  const noun = unsupported.length === 1 ? "agent" : "agents";
+
+  return [
+    `  ${chalk.dim("──")} ${chalk.bold("Community")} ${chalk.dim("─".repeat(46))}`,
+    `     ${names} detected but no checks available yet.`,
+    `     ${chalk.dim("Contribute checks for your agent:")}`,
+    `     ${chalk.cyan(CONTRIB_URL)}`,
+  ].join("\n");
 }
