@@ -63,7 +63,10 @@ function boxEmpty(): string {
 export function renderReport(
   score: OverallScore,
   agents: Map<string, DiscoveredAgent>,
-  opts?: { agentsViewAvailable?: boolean },
+  opts?: {
+    agentsViewAvailable?: boolean;
+    trends?: TrendAnalysis | null;
+  },
 ): string {
   const lines: string[] = [];
 
@@ -77,6 +80,14 @@ export function renderReport(
     lines.push(renderCategory(cat));
     lines.push("");
   }
+
+  // Insights: cost/usage narratives derived from AgentsView trend analysis.
+  // Always rendered (with an empty-state placeholder) so the section doesn't
+  // silently disappear when data is missing — keeps the report shape stable.
+  lines.push(
+    renderInsights(opts?.trends ?? null, opts?.agentsViewAvailable ?? false),
+  );
+  lines.push("");
 
   // Quick wins (behavioral: reduce friction to first action)
   const quickWins = collectQuickWins(score);
@@ -286,6 +297,66 @@ function renderQuickWins(wins: QuickWin[]): string {
   return lines.join("\n");
 }
 
+// ── Insights (cost/usage narratives from AgentsView) ───────────────
+
+/**
+ * Render the cost/usage Insights section. Always returns a non-empty block:
+ *   - AgentsView absent  → prompt to install
+ *   - No findings        → "no anomalies" note with the observed window
+ *   - With findings      → prioritized recommendation bullets
+ *
+ * The standalone `agent-hygiene track` command remains the way to see
+ * full per-day breakdowns; this section surfaces actionable takeaways
+ * inline so users don't have to know about a second command.
+ */
+function renderInsights(
+  trends: TrendAnalysis | null,
+  agentsViewAvailable: boolean,
+): string {
+  const lines: string[] = [];
+  const ruleWidth = 44;
+
+  lines.push(
+    `  ${chalk.magenta("◆")} ${chalk.bold.magenta("Insights")} ${chalk.dim("─".repeat(ruleWidth))}`,
+  );
+
+  if (!agentsViewAvailable) {
+    lines.push(
+      `     ${chalk.dim("·")} ${chalk.dim("Install AgentsView to see cost insights from real usage data.")}`,
+    );
+    return lines.join("\n");
+  }
+
+  // AgentsView is connected but returned no daily records in the window.
+  // Distinguish this from the "not installed" case so the user knows the
+  // integration is working — they just haven't used agents recently.
+  if (!trends) {
+    lines.push(
+      `     ${chalk.dim("·")} ${chalk.dim("AgentsView connected, but no usage recorded in the scan window.")}`,
+    );
+    return lines.join("\n");
+  }
+
+  if (trends.recommendations.length === 0) {
+    lines.push(
+      `     ${chalk.green("✓")} ${chalk.dim(`No cost anomalies detected over the last ${trends.period.days} day${trends.period.days === 1 ? "" : "s"}.`)}`,
+    );
+    return lines.join("\n");
+  }
+
+  for (const rec of trends.recommendations) {
+    const icon =
+      rec.priority === "high"
+        ? chalk.red("!")
+        : rec.priority === "medium"
+          ? chalk.yellow("→")
+          : chalk.dim("·");
+    lines.push(`     ${icon} ${rec.message}`);
+  }
+
+  return lines.join("\n");
+}
+
 // ── AgentsView status ──────────────────────────────────────────────
 
 /**
@@ -297,30 +368,30 @@ export function renderAgentsViewStatus(available: boolean): string {
       "  📊 AgentsView connected — session data checks active.",
     );
   }
-  const border =
-    "───────────────────────────────────────────────────────────";
+
+  // Inner content width (between the `│` rails). Keep this in sync with
+  // `border`. Using `padVis` to right-pad each line keeps the closing `│`
+  // aligned even when the embedded strings (URL, check count) change.
+  const innerWidth = 58;
+  const border = "─".repeat(innerWidth);
+
+  const yBar = chalk.yellow("│");
+  const line = (content: string): string =>
+    chalk.yellow("  ") + yBar + padVis(content, innerWidth) + yBar;
+
   return [
     "",
     chalk.yellow(`  ┌${border}┐`),
-    chalk.yellow("  │") +
-      chalk.bold.yellow("  5 session checks skipped") +
-      chalk.yellow(
-        " — AgentsView not installed         │",
-      ),
-    chalk.yellow("  │") +
-      chalk.dim(
-        "  Unlock Tier 2: model spend, cache efficiency,",
-      ) +
-      chalk.yellow("                │"),
-    chalk.yellow("  │") +
-      chalk.dim(
-        "  context bloat, session length & subagent cost tracking.",
-      ) +
-      chalk.yellow("      │"),
-    chalk.yellow("  │") +
+    line(
       "  " +
-      chalk.cyan("https://github.com/srosro/agentsview") +
-      chalk.yellow("                         │"),
+        chalk.bold.yellow("5 session checks skipped") +
+        chalk.yellow(" — AgentsView not installed"),
+    ),
+    line(chalk.dim("  Unlock Tier 2: model spend, cache efficiency,")),
+    line(
+      chalk.dim("  context bloat, session length & subagent cost tracking."),
+    ),
+    line("  " + chalk.cyan("https://github.com/wesm/agentsview")),
     chalk.yellow(`  └${border}┘`),
   ].join("\n");
 }

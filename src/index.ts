@@ -14,6 +14,11 @@ export {
   compareSnapshots,
 } from "./tracking/snapshots.js";
 export { analyzeTrends } from "./tracking/trends.js";
+export {
+  appendScoreRecord,
+  readScoreHistory,
+} from "./tracking/history.js";
+export { generateBadgeSvg, badgeMarkdownSnippet } from "./output/badge.js";
 export type {
   Check,
   CheckResult,
@@ -35,3 +40,4 @@ export type {
   CostBaseline,
 } from "./tracking/snapshots.js";
 export type { TrendAnalysis, Recommendation } from "./tracking/trends.js";
+export type { ScoreRecord } from "./tracking/history.js";

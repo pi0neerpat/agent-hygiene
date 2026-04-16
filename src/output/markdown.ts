@@ -1,5 +1,6 @@
 import type { OverallScore, CategoryScore } from "../scoring/index.js";
 import type { DiscoveredAgent } from "../checks/types.js";
+import type { TrendAnalysis } from "../tracking/trends.js";
 
 /**
  * Render the scan results as a shareable Markdown report.
@@ -7,6 +8,10 @@ import type { DiscoveredAgent } from "../checks/types.js";
 export function renderMarkdown(
   score: OverallScore,
   agents: Map<string, DiscoveredAgent>,
+  opts?: {
+    trends?: TrendAnalysis | null;
+    agentsViewAvailable?: boolean;
+  },
 ): string {
   const lines: string[] = [];
 
@@ -38,6 +43,14 @@ export function renderMarkdown(
     if (cat.total === 0) continue;
     lines.push(renderCategoryMarkdown(cat));
   }
+
+  // Insights (cost/usage narratives from AgentsView)
+  lines.push(
+    renderInsightsMarkdown(
+      opts?.trends ?? null,
+      opts?.agentsViewAvailable ?? false,
+    ),
+  );
 
   // Summary table
   lines.push("## Summary");
@@ -98,4 +111,55 @@ function renderTextBar(score: number): string {
   const filled = Math.round((score / 100) * width);
   const empty = width - filled;
   return "█".repeat(filled) + "░".repeat(empty) + ` ${score}%`;
+}
+
+/**
+ * Render the Insights section for the Markdown report. Always emits a
+ * heading with either recommendations or an empty-state note so the
+ * report's structure stays stable across runs with and without data.
+ */
+function renderInsightsMarkdown(
+  trends: TrendAnalysis | null,
+  agentsViewAvailable: boolean,
+): string {
+  const lines: string[] = [];
+  lines.push("## Insights");
+  lines.push("");
+
+  if (!agentsViewAvailable) {
+    lines.push(
+      "_Install AgentsView to see cost insights from real usage data._",
+    );
+    lines.push("");
+    return lines.join("\n");
+  }
+
+  if (!trends) {
+    lines.push(
+      "_AgentsView connected, but no usage recorded in the scan window._",
+    );
+    lines.push("");
+    return lines.join("\n");
+  }
+
+  if (trends.recommendations.length === 0) {
+    const d = trends.period.days;
+    lines.push(
+      `_No cost anomalies detected over the last ${d} day${d === 1 ? "" : "s"}._`,
+    );
+    lines.push("");
+    return lines.join("\n");
+  }
+
+  for (const rec of trends.recommendations) {
+    const marker =
+      rec.priority === "high"
+        ? "🔴"
+        : rec.priority === "medium"
+          ? "🟡"
+          : "⚪";
+    lines.push(`- ${marker} ${rec.message}`);
+  }
+  lines.push("");
+  return lines.join("\n");
 }

@@ -3,12 +3,16 @@ import { getModelTokens, getTotalTokens } from "../../tracking/agentsview.js";
 import { checkSessionDataAvailable } from "./helpers.js";
 
 /**
- * Analyzes subagent spend ratio vs main session cost.
+ * Detects subagent cost inefficiency from token distribution alone.
  *
- * Heuristic: if Haiku tokens are very low compared to total,
- * subagents aren't being delegated to cheaper models. Conversely,
- * if Opus tokens dominate even though SUBAGENT_MODEL is set,
- * subagents might not be picking up the override.
+ * Pure Tier 2 (Sprint 3.5): this check used to cross-reference env vars
+ * and shell profile contents. That duplicated the Tier 1 `subagent-model`
+ * check and blurred the tier boundary. It now observes only the signal
+ * available in AgentsView data:
+ *
+ *   Heavy Opus share + negligible Haiku share ⇒ subagent tasks (which
+ *   are typically exploration / lookup / research) are running on the
+ *   premium model. Routing them to Haiku would save 60-80% of that spend.
  */
 export const subagentCostCheck: Check = {
   id: "subagent-cost",
@@ -17,7 +21,8 @@ export const subagentCostCheck: Check = {
   tier: "session",
   category: "cost",
   agents: ["claude-code"],
-  estimatedSavings: "Routing subagents to Haiku/Sonnet can save 60-80% on exploration tasks",
+  estimatedSavings:
+    "Routing subagents to Haiku/Sonnet can save 60-80% on exploration tasks",
   weight: 7,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
@@ -34,37 +39,33 @@ export const subagentCostCheck: Check = {
     const sonnetTokens = getModelTokens(data, /sonnet/i);
     const haikuTokens = getModelTokens(data, /haiku/i);
 
-    // If there's meaningful usage but zero haiku tokens, subagents
-    // are probably running on expensive models
-    const cheapTokens = haikuTokens + sonnetTokens;
-    const cheapPct = (cheapTokens / total) * 100;
     const opusPct = (opusTokens / total) * 100;
+    const haikuPct = (haikuTokens / total) * 100;
+    const cheapPct = ((haikuTokens + sonnetTokens) / total) * 100;
 
-    // Check if SUBAGENT_MODEL is set
-    const subagentModelSet =
-      !!ctx.env.CLAUDE_CODE_SUBAGENT_MODEL ||
-      ctx.shellProfileContents.includes("CLAUDE_CODE_SUBAGENT_MODEL");
-
-    if (opusPct > 80 && !subagentModelSet) {
+    // Strong signal: dominant Opus with negligible Haiku.
+    // Subagent work is almost certainly running on Opus.
+    if (opusPct > 80 && haikuPct < 2) {
       return {
         passed: false,
-        message: `${opusPct.toFixed(0)}% of tokens on Opus with no subagent model override`,
+        message: `${opusPct.toFixed(0)}% Opus and ${haikuPct.toFixed(0)}% Haiku — subagents likely on premium model`,
         details:
-          "Nearly all tokens are going to Opus, including subagent tasks. Set CLAUDE_CODE_SUBAGENT_MODEL=claude-haiku-4-5-20251001 to route exploration and research tasks to a cheaper model.",
+          "Near-zero Haiku usage with dominant Opus suggests exploration and research tasks are running on the premium model. Set CLAUDE_CODE_SUBAGENT_MODEL=claude-haiku-4-5-20251001 (see the `subagent-model` check) so subagents route to Haiku.",
       };
     }
 
-    if (subagentModelSet && opusPct > 60) {
+    // Moderate signal: heavy Opus with very little Haiku.
+    if (opusPct > 60 && haikuPct < 5) {
       return {
         passed: false,
-        message: `Despite SUBAGENT_MODEL being set, ${opusPct.toFixed(0)}% of tokens still on Opus`,
+        message: `${opusPct.toFixed(0)}% Opus with only ${haikuPct.toFixed(0)}% Haiku — subagent routing looks off`,
         details:
-          "The subagent model override is set but Opus still dominates. Check if subagents are actually being used for research/exploration tasks.",
-        confidence: 0.5,
+          "Low Haiku share suggests subagents aren't being routed to cheaper models. Confirm CLAUDE_CODE_SUBAGENT_MODEL is set and that you're delegating exploration to subagents.",
+        confidence: 0.6,
       };
     }
 
-    if (cheapPct > 30) {
+    if (cheapPct >= 30) {
       return {
         passed: true,
         message: `${cheapPct.toFixed(0)}% of tokens on Sonnet/Haiku — good cost distribution`,
@@ -73,7 +74,11 @@ export const subagentCostCheck: Check = {
 
     return {
       passed: true,
-      message: `Model mix: ${opusPct.toFixed(0)}% Opus, ${(100 - opusPct).toFixed(0)}% other`,
+      message: `Model mix: ${opusPct.toFixed(0)}% Opus · ${sonnetShare(sonnetTokens, total)} Sonnet · ${haikuPct.toFixed(0)}% Haiku`,
     };
   },
 };
+
+function sonnetShare(sonnetTokens: number, total: number): string {
+  return `${((sonnetTokens / total) * 100).toFixed(0)}%`;
+}

@@ -10,14 +10,20 @@ Prevents quality degradation (indirect cost savings by avoiding wasted tokens on
 Using defaults. Context fills to 80%+, Claude's responses degrade silently, you re-prompt and burn tokens on corrections.
 
 ## Good Example
-```bash
-export CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=60
+In `~/.claude/settings.json`:
+```json
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "env": {
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "60"
+  }
+}
 ```
 Claude compacts at 60% context usage, maintaining high-quality output throughout long sessions.
 
 ## How to Implement
-1. Add `export CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=60` to your shell profile (`.zshrc`, `.bashrc`).
-2. Or set it in `.claude/settings.json` under environment variables.
+1. Add to your `~/.claude/settings.json` under the `"env"` key (recommended — scoped to Claude Code only).
+2. Or for project-level override, add to `.claude/settings.json` in the project root.
 
 ## Gotchas & Caveats
 - Quality degradation starts at 20-40% context fullness, not 80-90% as most assume.

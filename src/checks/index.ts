@@ -26,6 +26,7 @@ import { subagentsResearchCheck } from "./advisory/subagents-research.js";
 import { batchApiCheck } from "./advisory/batch-api.js";
 import { promptCachingCheck } from "./advisory/prompt-caching.js";
 import { opusplanModeCheck } from "./advisory/opusplan-mode.js";
+import { sonnetDefaultCheck } from "./advisory/sonnet-default.js";
 
 /**
  * All registered checks, in order of execution.
@@ -58,6 +59,7 @@ export const ALL_CHECKS: Check[] = [
   batchApiCheck,
   promptCachingCheck,
   opusplanModeCheck,
+  sonnetDefaultCheck,
 ];
 
 export interface CheckRunResult {

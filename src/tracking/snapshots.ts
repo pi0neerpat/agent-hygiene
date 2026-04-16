@@ -1,6 +1,6 @@
-import { mkdir, readFile, writeFile, readdir } from "fs/promises";
+import { readFile, writeFile, readdir } from "fs/promises";
 import { join } from "path";
-import { getHomeDir } from "../discovery/platform.js";
+import { getSnapshotsDir, ensureDir } from "../utils/config.js";
 import type { OverallScore, CategoryScore } from "../scoring/index.js";
 import type { AgentsViewData } from "./agentsview.js";
 import { getTotalTokens, getModelTokens, getCacheReadRatio } from "./agentsview.js";
@@ -56,13 +56,9 @@ export interface CostDelta {
 
 // ── Snapshot directory ─────────────────────────────────────────────
 
-function getSnapshotDir(): string {
-  return join(getHomeDir(), ".agent-hygiene", "snapshots");
-}
-
 async function ensureSnapshotDir(): Promise<string> {
-  const dir = getSnapshotDir();
-  await mkdir(dir, { recursive: true });
+  const dir = getSnapshotsDir();
+  await ensureDir(dir);
   return dir;
 }
 
@@ -116,7 +112,7 @@ function buildCostBaseline(data: AgentsViewData): CostBaseline {
 // ── Load ───────────────────────────────────────────────────────────
 
 export async function loadSnapshot(name: string): Promise<Snapshot | null> {
-  const dir = getSnapshotDir();
+  const dir = getSnapshotsDir();
   const filename = `${sanitizeFilename(name)}.json`;
   try {
     const content = await readFile(join(dir, filename), "utf-8");
@@ -127,7 +123,7 @@ export async function loadSnapshot(name: string): Promise<Snapshot | null> {
 }
 
 export async function listSnapshots(): Promise<string[]> {
-  const dir = getSnapshotDir();
+  const dir = getSnapshotsDir();
   try {
     const files = await readdir(dir);
     return files

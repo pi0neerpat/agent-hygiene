@@ -1,0 +1,35 @@
+name: "Agent Hygiene Check"
+description: "Scan your AI coding agent setup, score it against 20 proven techniques"
+branding:
+  icon: "shield"
+  color: "blue"
+
+inputs:
+  min-score:
+    description: "Minimum passing score (0-100). Fails the check if score is below."
+    required: false
+    default: "70"
+  directory:
+    description: "Project directory to scan"
+    required: false
+    default: "."
+  version:
+    description: "Version of agent-hygiene to install"
+    required: false
+    default: "latest"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install agent-hygiene
+      shell: bash
+      env:
+        AGENT_HYGIENE_VERSION: ${{ inputs.version }}
+      run: npm install -g "agent-hygiene@${AGENT_HYGIENE_VERSION}"
+
+    - name: Run scan
+      shell: bash
+      env:
+        AGENT_HYGIENE_DIRECTORY: ${{ inputs.directory }}
+        AGENT_HYGIENE_MIN_SCORE: ${{ inputs.min-score }}
+      run: agent-hygiene scan --dir "${AGENT_HYGIENE_DIRECTORY}" --min-score "${AGENT_HYGIENE_MIN_SCORE}" --no-session
