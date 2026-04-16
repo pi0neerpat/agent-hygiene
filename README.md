@@ -4,7 +4,7 @@
 
 Your agents are dirty, inefficient, and wasting resources.
 
-Clean your agents -> Change your habits -> Save the world 🌍
+Clean your agents -> Improve your habits -> Save the world 🌍
 
 _Leaderboard soon?_
 
@@ -114,9 +114,15 @@ powershell -ExecutionPolicy ByPass -c "irm https://agentsview.io/install.ps1 | i
 
 Once installed, run `agent-hygiene scan` again and the Session checks (Opus overuse, context bloat, cache miss rate, session length, subagent cost) will light up.
 
-## LeanMaxxing
+## LeanMaxxing Leaderboard (coming soon)
 
-Agent Hygiene feeds into LeanMaxxing- a competitive leaderboard where developers compare how efficiently their agent systems run. Run `agent-hygiene export` to generate your anonymized payload and submit your score.
+TokenMaxxers can't have all the fun.
+
+## Agents Supported
+
+Claude Code, Codex
+
+Want to add checks for Cursor, Windsurf, Copilot, or another agent? There's a step-by-step prompt that walks your AI through the entire process- discovery, checks, tests, and docs. See [contrib/add-agent-checks/PROMPT.md](https://github.com/pi0neerpat/agent-hygiene/blob/main/contrib/add-agent-checks/PROMPT.md).
 
 ## References
 
