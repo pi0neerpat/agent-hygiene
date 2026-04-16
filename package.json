@@ -1,4 +1,40 @@
 {
   "name": "agent-hygiene",
-  "packageManager": "yarn@4.12.0"
+  "version": "0.1.0",
+  "description": "Scan your AI coding agent setup, score it against 20 proven token/cost-reduction techniques, and optionally apply fixes.",
+  "type": "module",
+  "bin": "./dist/cli.js",
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "start": "node dist/cli.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "claude",
+    "cursor",
+    "copilot",
+    "token-optimization",
+    "cost-reduction",
+    "cli"
+  ],
+  "license": "MIT",
+  "packageManager": "yarn@4.12.0",
+  "dependencies": {
+    "chalk": "^5.6.2",
+    "commander": "^14.0.3",
+    "ora": "^9.3.0",
+    "tinyglobby": "^0.2.16"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.2"
+  }
 }

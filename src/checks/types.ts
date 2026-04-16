@@ -1,0 +1,60 @@
+export type Tier = "auto" | "semi-auto" | "advisory";
+export type Category = "context" | "cost" | "habits" | "structure";
+
+export interface CheckResult {
+  passed: boolean;
+  message: string;
+  details?: string;
+  /** 0-1 confidence for semi-auto checks */
+  confidence?: number;
+}
+
+export interface FixResult {
+  applied: boolean;
+  message: string;
+  filesModified?: string[];
+  backedUpFiles?: string[];
+}
+
+export interface ScanContext {
+  /** Discovered agents keyed by agent id */
+  agents: Map<string, DiscoveredAgent>;
+  /** Home directory */
+  homeDir: string;
+  /** Current working directory (project root) */
+  projectDir: string;
+  /** Environment variables */
+  env: Record<string, string | undefined>;
+  /** Shell profile contents (combined .zshrc, .bashrc, etc.) */
+  shellProfileContents: string;
+  /** Read a file relative to project or absolute, returns null if missing */
+  readFile(path: string): Promise<string | null>;
+  /** Check if a path exists */
+  exists(path: string): Promise<boolean>;
+  /** List files in a directory */
+  listDir(path: string): Promise<string[]>;
+  /** Glob files from project root */
+  glob(pattern: string): Promise<string[]>;
+}
+
+export interface DiscoveredAgent {
+  id: string;
+  name: string;
+  status: "installed" | "configured" | "not-found";
+  configPaths: string[];
+  /** Paths that actually exist on disk */
+  foundPaths: string[];
+}
+
+export interface Check {
+  id: string;
+  name: string;
+  technique: number;
+  tier: Tier;
+  category: Category;
+  agents: string[];
+  estimatedSavings: string;
+  weight: number;
+  run(ctx: ScanContext): Promise<CheckResult>;
+  fix?(ctx: ScanContext): Promise<FixResult>;
+}
