@@ -492,7 +492,7 @@ __metadata:
     tsup: "npm:^8.5.1"
     typescript: "npm:^6.0.2"
   bin:
-    agent-hygiene: ./dist/cli.js
+    agent-hygiene: dist/cli.js
   languageName: unknown
   linkType: soft
 
