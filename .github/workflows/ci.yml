@@ -15,15 +15,13 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
-          cache: yarn
-          cache-dependency-path: yarn.lock
+          node-version: 24
 
       - name: Enable Corepack
         run: corepack enable
