@@ -377,7 +377,10 @@ export function getMaxSessionTokens(
   let peak: number | undefined;
   for (const day of data.dailyUsage) {
     if (day.maxSessionTokens === undefined) continue;
-    peak = peak === undefined ? day.maxSessionTokens : Math.max(peak, day.maxSessionTokens);
+    peak =
+      peak === undefined
+        ? day.maxSessionTokens
+        : Math.max(peak, day.maxSessionTokens);
   }
   return peak;
 }

@@ -142,7 +142,16 @@ export const autocompactCheck: Check = {
       };
     }
 
-    const num = loc.value ? parseInt(loc.value, 10) : 100;
+    const num = loc.value ? Number(loc.value) : 100;
+    if (!Number.isInteger(num) || num < 1 || num > 100) {
+      return {
+        passed: false,
+        message: `${varName} is ${loc.value} (invalid, expected 1-100)`,
+        details:
+          'Set to an integer percentage, for example: "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "60"',
+      };
+    }
+
     if (num > 80) {
       return {
         passed: false,

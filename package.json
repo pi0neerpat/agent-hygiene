@@ -14,6 +14,7 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "start": "node dist/cli.js",
+    "test": "yarn build && node --test",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [

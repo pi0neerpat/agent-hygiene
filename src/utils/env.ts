@@ -36,7 +36,7 @@ export function isEnvVarSet(
 ): boolean {
   if (env[name]) return true;
   // Check for export NAME= or NAME= patterns in shell profiles
-  const pattern = new RegExp(`(?:export\\s+)?${name}\\s*=`, "m");
+  const pattern = new RegExp(`(?:export\\s+)?${escapeRegExp(name)}\\s*=`, "m");
   return pattern.test(shellContents);
 }
 
@@ -51,9 +51,13 @@ export function getEnvVarValue(
   if (env[name]) return env[name];
   // Try to extract from shell profiles
   const pattern = new RegExp(
-    `(?:export\\s+)?${name}\\s*=\\s*["']?([^"'\\n]+)["']?`,
+    `(?:export\\s+)?${escapeRegExp(name)}\\s*=\\s*["']?([^"'\\n]+)["']?`,
     "m",
   );
   const match = shellContents.match(pattern);
   return match?.[1]?.trim();
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
