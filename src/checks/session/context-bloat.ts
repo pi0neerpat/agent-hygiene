@@ -26,7 +26,11 @@ export const contextBloatCheck: Check = {
   estimatedSavings: "Cutting context pressure reduces token usage 20-40%",
   weight: 7,
   impact: "high",
-  fixPrompt: `Analyze my session patterns for context window pressure. Add a reminder to CLAUDE.md to use /clear between unrelated tasks. If CLAUDE_AUTOCOMPACT_PCT_OVERRIDE is above 70%, lower it to 50-60% to trigger compaction earlier. Identify any workflows where I'm carrying stale context across task boundaries and suggest where to insert /clear breakpoints. Consider offloading exploration work to subagents to keep the main session lean.`,
+  fixPrompt: (_ctx, result) =>
+    `${result.message}. Context window pressure increases token costs and degrades response quality. ` +
+    `Add a rule to CLAUDE.md: "Use /clear between unrelated tasks to reset context." ` +
+    `If CLAUDE_AUTOCOMPACT_PCT_OVERRIDE is above 70%, lower it to 50-60% to trigger compaction earlier. ` +
+    `Offload exploration work to subagents to keep the main session lean.`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     const early = checkSessionDataAvailable(ctx);

@@ -10,7 +10,7 @@ export const btwUsageCheck: Check = {
   estimatedSavings: "Side questions in /btw don't pollute main context",
   weight: 3,
   impact: "low",
-  fixPrompt: `Add a tip to CLAUDE.md about using the /btw command for quick side questions. Instead of asking "btw, what does this regex do?" in the main session (which adds tokens to the working context), use /btw to open a separate lightweight context. This keeps the main session focused on the current task without accumulating tangential conversation.`,
+  fixPrompt: `Side questions in the main session add tokens to the working context unnecessarily. Add a tip to CLAUDE.md: "Use /btw for quick side questions instead of asking in the main session." The /btw command opens a separate lightweight context, keeping the main session focused on the current task.`,
 
   async run(_ctx: ScanContext): Promise<CheckResult> {
     return {

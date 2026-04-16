@@ -10,7 +10,7 @@ export const opusplanModeCheck: Check = {
   estimatedSavings: "Plan before implementing to avoid expensive rework",
   weight: 3,
   impact: "low",
-  fixPrompt: `Add a workflow rule to CLAUDE.md: "For complex multi-file features, use /plan mode first to design the approach before writing code." Plan mode prevents expensive rework cycles where the agent implements, discovers issues, then re-implements. It's especially valuable for architectural changes, new features spanning 3+ files, and refactors that touch shared interfaces.`,
+  fixPrompt: `Plan mode prevents expensive rework cycles where the agent implements, discovers issues, then re-implements. Add a workflow rule to CLAUDE.md: "For complex multi-file features, use /plan mode first to design the approach before writing code." Especially valuable for architectural changes, features spanning 3+ files, and refactors touching shared interfaces.`,
 
   async run(_ctx: ScanContext): Promise<CheckResult> {
     return {

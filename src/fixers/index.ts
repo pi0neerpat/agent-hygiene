@@ -236,8 +236,12 @@ export async function runFixMode(
       }
       console.log("");
     } else if (item.check.fixPrompt) {
-      // Prompt path
-      showFixPrompt(item.check.name, item.check.fixPrompt);
+      // Prompt path — resolve dynamic prompts if needed
+      const prompt =
+        typeof item.check.fixPrompt === "function"
+          ? item.check.fixPrompt(ctx, item.result)
+          : item.check.fixPrompt;
+      showFixPrompt(item.check.name, prompt);
       resolved.add(item.check.id);
     }
   }

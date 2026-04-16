@@ -15,7 +15,9 @@ export const codexSetupCheck: Check = {
   estimatedSavings: "Proper setup enables sandbox and cost controls",
   weight: 5,
   impact: "med",
-  fixPrompt: `Set up Codex for this project. Create an AGENTS.md file in the project root with concise instructions — project conventions, key architecture decisions, and testing requirements. Keep it under 80 lines. If ~/.codex/ doesn't exist, run "codex" once to initialize the global config directory which stores sandbox settings and preferences.`,
+  fixPrompt: (_ctx, result) =>
+    `${result.message}. Create an AGENTS.md file in the project root with concise project conventions, key architecture decisions, and testing requirements — keep it under 80 lines. ` +
+    `If ~/.codex/ doesn't exist, run "codex" once to initialize the global config directory for sandbox settings and preferences.`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     const issues: string[] = [];

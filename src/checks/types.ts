@@ -65,6 +65,8 @@ export interface Check {
   run(ctx: ScanContext): Promise<CheckResult>;
   /** Automated fixer — mutates files/settings directly. */
   fix?(ctx: ScanContext): Promise<FixResult>;
-  /** Agent prompt for manual fixes — shown to user to copy into their AI agent. */
-  fixPrompt?: string;
+  /** Agent prompt for manual fixes — shown to user to copy into their AI agent.
+   *  Can be a static string or a function that receives scan context and check
+   *  result for dynamic, context-aware prompts. */
+  fixPrompt?: string | ((ctx: ScanContext, result: CheckResult) => string);
 }

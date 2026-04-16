@@ -11,7 +11,7 @@ export const promptCachingCheck: Check = {
   estimatedSavings: "Cached prompts cost 90% less per token",
   weight: 6,
   impact: "med",
-  fixPrompt: `Enable prompt caching in my LLM API calls. Update to the latest Anthropic SDK which supports automatic prompt caching. For manual control, add cache_control breakpoints to system messages that are reused across calls — cached input tokens cost 90% less. Structure prompts so that the static system prompt comes first (and gets cached), with dynamic user content appended after the cache boundary.`,
+  fixPrompt: `Cached input tokens cost 90% less than uncached ones. Update to the latest Anthropic SDK which supports automatic prompt caching. For manual control, add cache_control breakpoints to system messages reused across calls. Structure prompts with the static system prompt first (cached) and dynamic user content appended after the cache boundary.`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     // Check if the project uses the Anthropic SDK

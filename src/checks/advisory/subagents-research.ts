@@ -10,7 +10,7 @@ export const subagentsResearchCheck: Check = {
   estimatedSavings: "Subagents use separate context, saving main window tokens",
   weight: 4,
   impact: "low",
-  fixPrompt: `Add guidance to CLAUDE.md about delegating research and exploration to subagents. When exploring a codebase, searching for patterns, or researching a question, instruct Claude to use the Agent tool to spawn subagents. Subagents run in separate context windows with cheaper models (if CLAUDE_CODE_SUBAGENT_MODEL is set), keeping the main session focused and reducing costs.`,
+  fixPrompt: `Subagents run in separate context windows with cheaper models (when CLAUDE_CODE_SUBAGENT_MODEL is set), keeping the main session lean. Add guidance to CLAUDE.md: "Delegate codebase exploration, pattern searches, and research questions to subagents using the Agent tool." This reduces main session token costs and preserves context for the primary task.`,
 
   async run(_ctx: ScanContext): Promise<CheckResult> {
     return {

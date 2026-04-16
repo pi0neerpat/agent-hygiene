@@ -15,7 +15,10 @@ export const agentsMdSizeCheck: Check = {
   estimatedSavings: "Reduces per-message context overhead",
   weight: 7,
   impact: "high",
-  fixPrompt: `Review AGENTS.md and reduce it to under 80 lines. AGENTS.md is injected into every Codex message, so keep it concise. Move detailed implementation guides, large code examples, and step-by-step workflows into separate referenced files. Focus AGENTS.md on high-level project conventions and key architectural decisions only.`,
+  fixPrompt: (_ctx, result) =>
+    `${result.message}. AGENTS.md is injected into every Codex message, so keeping it concise reduces per-message token cost. ` +
+    `Reduce AGENTS.md to under 80 lines: move detailed implementation guides, large code examples, and step-by-step workflows into separate referenced files. ` +
+    `Focus on high-level project conventions and key architectural decisions only.`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     const projectAgentsMd = await ctx.readFile(

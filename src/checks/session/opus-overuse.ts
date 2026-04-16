@@ -31,7 +31,10 @@ export const opusOveruseCheck: Check = {
   estimatedSavings: "Sonnet is ~5x cheaper per token than Opus",
   weight: 8,
   impact: "high",
-  fixPrompt: `Review my recent Claude Code sessions and identify tasks where Opus was used but Sonnet would have been sufficient. Update my workflow to default to Sonnet for routine tasks: file edits, simple refactors, test writing, and boilerplate generation. Reserve Opus for architecture decisions, complex debugging, and novel problem-solving. Check my settings and CLAUDE.md for any model preferences that should be updated to enforce this.`,
+  fixPrompt: (_ctx, result) =>
+    `${result.message}. Default to Sonnet for routine tasks: file edits, simple refactors, test writing, and boilerplate generation. ` +
+    `Reserve Opus for architecture decisions, complex debugging, and novel problem-solving. ` +
+    `Check settings and CLAUDE.md for model preferences that should be updated.`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     const early = checkSessionDataAvailable(ctx);

@@ -25,7 +25,10 @@ export const subagentCostCheck: Check = {
     "Routing subagents to Haiku/Sonnet can save 60-80% on exploration tasks",
   weight: 7,
   impact: "high",
-  fixPrompt: `Configure subagent routing to use cheaper models. Set CLAUDE_CODE_SUBAGENT_MODEL=claude-haiku-4-5-20251001 in ~/.claude/settings.json or your shell profile. This routes exploration, research, and lookup tasks to Haiku instead of the premium model, saving 60-80% on subagent costs. Also add guidance to CLAUDE.md to delegate exploration and codebase searches to subagents rather than doing them in the main context.`,
+  fixPrompt: (_ctx, result) =>
+    `${result.message}. Routing subagents to cheaper models saves 60-80% on exploration tasks. ` +
+    `Set CLAUDE_CODE_SUBAGENT_MODEL=claude-haiku-4-5-20251001 in ~/.claude/settings.json or the shell profile. ` +
+    `Add guidance to CLAUDE.md to delegate exploration and codebase searches to subagents rather than doing them in the main context.`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     const early = checkSessionDataAvailable(ctx);
