@@ -6,7 +6,7 @@ Your agents are dirty, inefficient, and wasting resources.
 
 Clean your agents -> Improve your habits -> Save the world 🌍
 
-_Leaderboard soon?_
+_LeanMaxxing Leaderboard soon?_
 
 ## Quick Start
 

@@ -1,7 +1,7 @@
 {
   "name": "agent-hygiene",
   "version": "0.1.0",
-  "description": "Scan your AI coding agent setup, score it against 20 proven token/cost-reduction techniques, and optionally apply fixes.",
+  "description": "Scan your agent setup, score it against 20 proven token/cost-reduction techniques, and optionally apply fixes.",
   "type": "module",
   "bin": "dist/cli.js",
   "main": "./dist/index.js",
@@ -25,6 +25,14 @@
     "cost-reduction",
     "cli"
   ],
+  "homepage": "https://github.com/pi0neerpat/agent-hygiene#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pi0neerpat/agent-hygiene.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pi0neerpat/agent-hygiene/issues"
+  },
   "license": "MIT",
   "packageManager": "yarn@4.12.0",
   "dependencies": {
