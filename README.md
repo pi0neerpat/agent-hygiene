@@ -1,6 +1,6 @@
-# agent-hygiene
+# agent-hygiene CLI
 
-<img src="https://github.com/pi0neerpat/agent-hygiene/blob/main/docs/agent-hygiene.png" width="500"  />
+<img src="https://github.com/pi0neerpat/agent-hygiene/blob/main/docs/agent-hygiene.png?raw=true" width="500"  />
 
 Your agents are dirty, inefficient, and wasting resources.
 
@@ -20,11 +20,11 @@ Let agents help you clean w/ exact prompts.
 npx agent-hygiene scan --fix
 ```
 
-<img src="https://github.com/pi0neerpat/agent-hygiene/blob/main/docs/demo-fix.png" />
+<img src="https://github.com/pi0neerpat/agent-hygiene/blob/main/docs/demo-fix.png?raw=true" />
 
 ## Example Output
 
-<img src="https://github.com/pi0neerpat/agent-hygiene/blob/main/docs/demo.png" />
+<img src="https://github.com/pi0neerpat/agent-hygiene/blob/main/docs/demo.png?raw=true" />
 
 ## What It Checks
 
@@ -88,7 +88,7 @@ All 20 techniques documented here: [docs/techniques/](./docs/techniques/)
 - `export` - anonymized JSON for leaderboard sharing (shipping soon)
 - `badge` - shields.io-style SVG for your repo
 
-<img src="https://github.com/pi0neerpat/agent-hygiene/blob/main/docs/demo-track.png" />
+<img src="https://github.com/pi0neerpat/agent-hygiene/blob/main/docs/demo-track.png?raw=true" />
 
 ## CI Integration
 
