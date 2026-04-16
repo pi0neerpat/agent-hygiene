@@ -629,7 +629,7 @@ export function renderAgentDiscovery(
 // ── Unsupported agents CTA ──────────────────────────────────────
 
 const CONTRIB_URL =
-  "https://github.com/pi0neerpat/agent-hygiene/tree/main/contrib/add-agent-checks";
+  "https://github.com/pi0neerpat/agent-hygiene/blob/main/contrib/add-agent-checks/PROMPT.md";
 
 /**
  * Derive which agent IDs have at least one check, then render a CTA

@@ -92,7 +92,6 @@ export const AGENT_REGISTRY: AgentDefinition[] = [
     id: "amp",
     name: "Amp",
     configPaths: [
-      "<project>/AGENTS.md",
       "~/.ampcli/",
     ],
   },
