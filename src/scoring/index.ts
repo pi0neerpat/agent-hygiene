@@ -46,9 +46,9 @@ export function calculateScore(results: CheckRunResult[]): OverallScore {
     );
     const passedWeight = catChecks.reduce((sum, r) => {
       if (r.result.passed) return sum + r.check.weight;
-      // Semi-auto with low confidence get partial credit
+      // Session/semi-auto checks with low confidence get partial credit
       if (
-        r.check.tier === "semi-auto" &&
+        (r.check.tier === "session" || r.check.tier === "semi-auto") &&
         r.result.confidence !== undefined
       ) {
         return sum + r.check.weight * r.result.confidence;

@@ -1,6 +1,61 @@
 import chalk from "chalk";
 import type { OverallScore, CategoryScore } from "../scoring/index.js";
 import type { DiscoveredAgent } from "../checks/types.js";
+import type { SnapshotComparison, Snapshot } from "../tracking/snapshots.js";
+import type { TrendAnalysis } from "../tracking/trends.js";
+
+// ── Visual helpers ─────────────────────────────────────────────────
+
+/** Strip ANSI escape codes to measure visible string width */
+function visLen(s: string): number {
+  // eslint-disable-next-line no-control-regex
+  return s.replace(/\x1b\[[0-9;]*m/g, "").length;
+}
+
+/** Right-pad a string to `width` visible characters (ANSI-aware) */
+function padVis(s: string, width: number): string {
+  const diff = width - visLen(s);
+  return diff > 0 ? s + " ".repeat(diff) : s;
+}
+
+function padRight(str: string, len: number): string {
+  return str + " ".repeat(Math.max(0, len - str.length));
+}
+
+function scoreColor(score: number): typeof chalk.green {
+  if (score >= 80) return chalk.green;
+  if (score >= 60) return chalk.yellow;
+  return chalk.red;
+}
+
+function renderBar(score: number, width: number): string {
+  const filled = Math.round((score / 100) * width);
+  const empty = width - filled;
+  const color = scoreColor(score);
+  return color("█".repeat(filled)) + chalk.dim("░".repeat(empty));
+}
+
+// ── Box drawing (for header card) ──────────────────────────────────
+
+const BOX_W = 56; // inner content width
+
+function boxTop(): string {
+  return `  ┌${"─".repeat(BOX_W + 2)}┐`;
+}
+
+function boxBot(): string {
+  return `  └${"─".repeat(BOX_W + 2)}┘`;
+}
+
+function boxLine(content: string): string {
+  return `  │ ${padVis(content, BOX_W)} │`;
+}
+
+function boxEmpty(): string {
+  return `  │ ${" ".repeat(BOX_W)} │`;
+}
+
+// ── Main report ────────────────────────────────────────────────────
 
 /**
  * Render the full scan report to the terminal.
@@ -8,23 +63,12 @@ import type { DiscoveredAgent } from "../checks/types.js";
 export function renderReport(
   score: OverallScore,
   agents: Map<string, DiscoveredAgent>,
+  opts?: { agentsViewAvailable?: boolean },
 ): string {
   const lines: string[] = [];
 
   lines.push("");
-  lines.push(renderHeader(score));
-  lines.push("");
-
-  // Discovered agents
-  lines.push(chalk.bold("  Detected Agents"));
-  for (const [, agent] of agents) {
-    if (agent.status === "not-found") continue;
-    const icon =
-      agent.status === "configured"
-        ? chalk.green("●")
-        : chalk.yellow("○");
-    lines.push(`  ${icon} ${agent.name}`);
-  }
+  lines.push(renderHeader(score, agents));
   lines.push("");
 
   // Category breakdown
@@ -33,6 +77,16 @@ export function renderReport(
     lines.push(renderCategory(cat));
     lines.push("");
   }
+
+  // Quick wins (behavioral: reduce friction to first action)
+  const quickWins = collectQuickWins(score);
+  if (quickWins.length > 0) {
+    lines.push(renderQuickWins(quickWins));
+    lines.push("");
+  }
+
+  // AgentsView status
+  lines.push(renderAgentsViewStatus(opts?.agentsViewAvailable ?? false));
 
   // Footer
   lines.push(
@@ -45,41 +99,185 @@ export function renderReport(
   return lines.join("\n");
 }
 
-function renderHeader(score: OverallScore): string {
+// ── Header card ────────────────────────────────────────────────────
+
+function renderHeader(
+  score: OverallScore,
+  agents: Map<string, DiscoveredAgent>,
+): string {
   const color = scoreColor(score.score);
-  const bar = renderBar(score.score, 20);
-  return [
-    chalk.bold(`  Agent Hygiene Score: ${color(`${score.score}/100`)} ${chalk.dim(`(${score.grade})`)}`),
-    `  ${bar}`,
-  ].join("\n");
+
+  // Agent chips
+  const chips: string[] = [];
+  for (const [, agent] of agents) {
+    if (agent.status === "not-found") continue;
+    const dot =
+      agent.status === "configured"
+        ? chalk.green("●")
+        : chalk.yellow("○");
+    chips.push(`${dot} ${agent.name}`);
+  }
+
+  // Count failing / fixable checks (loss-framing)
+  const failCount = score.categories.reduce(
+    (n, cat) => n + cat.checks.filter((c) => !c.result.passed).length,
+    0,
+  );
+  const fixableCount = score.categories.reduce(
+    (n, cat) =>
+      n +
+      cat.checks.filter((c) => !c.result.passed && c.check.fix).length,
+    0,
+  );
+
+  const bar = renderBar(score.score, 38);
+  const scoreNum = color(chalk.bold(String(score.score)));
+  const scoreStr = `${scoreNum} ${chalk.dim("/ 100")}  ${chalk.dim(`(${score.grade})`)}`;
+
+  const headerLines = [
+    boxTop(),
+    boxEmpty(),
+    boxLine(
+      `${chalk.bold("Agent Hygiene Score")}          ${scoreStr}`,
+    ),
+    boxLine(bar),
+    boxEmpty(),
+    boxLine(chips.join("   ")),
+  ];
+
+  // Issue summary line — triggers loss aversion
+  if (failCount > 0) {
+    const issueWord = failCount === 1 ? "issue" : "issues";
+    let summary = `${failCount} ${issueWord} found`;
+    if (fixableCount > 0) {
+      summary += chalk.dim(" · ") + chalk.cyan(`${fixableCount} auto-fixable`);
+    }
+    headerLines.push(boxLine(chalk.dim(summary)));
+  } else {
+    headerLines.push(boxLine(chalk.green("No issues found — clean setup!")));
+  }
+
+  headerLines.push(boxEmpty());
+  headerLines.push(boxBot());
+
+  return headerLines.join("\n");
 }
+
+// ── Category sections ──────────────────────────────────────────────
 
 function renderCategory(cat: CategoryScore): string {
   const lines: string[] = [];
   const color = scoreColor(cat.score);
-  const bar = renderBar(cat.score, 10);
 
+  // Section header: ── Category Name  A+ (100/100) ─────────
+  const label = chalk.bold(cat.category.name);
+  const gradeStr = `${color(cat.grade)} ${chalk.dim(`(${cat.score}/100)`)}`;
+  const headerContent = `${label}  ${gradeStr}`;
+  const ruleLen = 58 - visLen(headerContent);
   lines.push(
-    `  ${chalk.bold(padRight(cat.category.name, 20))} ${bar} ${color(cat.grade)} ${chalk.dim(`(${cat.score}/100)`)}`,
+    `  ${chalk.dim("──")} ${headerContent} ${chalk.dim("─".repeat(Math.max(1, ruleLen)))}`,
   );
 
-  for (const { check, result } of cat.checks) {
-    const icon = result.passed
-      ? chalk.green("✓")
-      : chalk.red("✗");
-    const msg = result.passed
-      ? chalk.dim(result.message)
-      : result.message;
-    lines.push(`    ${icon} ${msg}`);
+  const passed = cat.checks.filter((c) => c.result.passed);
+  const failed = cat.checks.filter((c) => !c.result.passed);
 
-    if (!result.passed && result.details) {
-      lines.push(chalk.dim(`      → ${result.details}`));
+  // Progressive disclosure: if ALL passing, show single collapsed line
+  if (failed.length === 0) {
+    lines.push(
+      `     ${chalk.green("✓")} ${chalk.green(`All ${passed.length} checks passing`)}`,
+    );
+    return lines.join("\n");
+  }
+
+  // Show failures expanded with details
+  for (const { check, result } of failed) {
+    let icon: string;
+    let msg: string;
+
+    if (check.tier === "advisory") {
+      icon = chalk.blue("ℹ");
+      msg = chalk.blue(result.message);
+    } else if (check.tier === "session" || check.tier === "semi-auto") {
+      icon = chalk.yellow("⚠");
+      msg = chalk.yellow(result.message);
+    } else {
+      icon = chalk.red("✗");
+      msg = result.message;
     }
 
-    if (!result.passed && check.estimatedSavings) {
+    lines.push(`     ${icon} ${msg}`);
+
+    if (result.details) {
+      lines.push(chalk.dim(`       → ${result.details}`));
+    }
+
+    if (check.estimatedSavings && check.tier !== "advisory") {
       lines.push(
         chalk.dim(
-          `      💡 ${check.estimatedSavings}`,
+          `       💡 ${check.estimatedSavings}`,
+        ),
+      );
+    }
+  }
+
+  // Collapsed passing summary at the end
+  if (passed.length > 0) {
+    const noun = passed.length === 1 ? "check" : "checks";
+    lines.push(
+      `     ${chalk.green("✓")} ${chalk.dim(`${passed.length} ${noun} passing`)}`,
+    );
+  }
+
+  return lines.join("\n");
+}
+
+// ── Quick Wins ─────────────────────────────────────────────────────
+
+interface QuickWin {
+  message: string;
+  fixable: boolean;
+}
+
+function collectQuickWins(score: OverallScore): QuickWin[] {
+  const wins: QuickWin[] = [];
+
+  for (const cat of score.categories) {
+    for (const { check, result } of cat.checks) {
+      if (result.passed) continue;
+      if (check.tier === "advisory") continue;
+      // Only auto-tier checks qualify as "quick wins"
+      if (check.tier === "auto") {
+        wins.push({
+          message: result.message,
+          fixable: !!check.fix,
+        });
+      }
+    }
+  }
+
+  // Fixable wins first (lower friction), then limit to 3
+  wins.sort((a, b) =>
+    a.fixable === b.fixable ? 0 : a.fixable ? -1 : 1,
+  );
+  return wins.slice(0, 3);
+}
+
+function renderQuickWins(wins: QuickWin[]): string {
+  const lines: string[] = [];
+  const ruleWidth = 44;
+
+  lines.push(
+    `  ${chalk.cyan("⚡")} ${chalk.bold.cyan("Quick Wins")} ${chalk.dim("─".repeat(ruleWidth))}`,
+  );
+
+  for (let i = 0; i < wins.length; i++) {
+    const win = wins[i];
+    const num = chalk.white(`${i + 1}.`);
+    lines.push(`     ${num} ${win.message}`);
+    if (win.fixable) {
+      lines.push(
+        chalk.dim(
+          `        → run ${chalk.cyan("--fix")} to apply automatically`,
         ),
       );
     }
@@ -88,22 +286,191 @@ function renderCategory(cat: CategoryScore): string {
   return lines.join("\n");
 }
 
-function renderBar(score: number, width: number): string {
-  const filled = Math.round((score / 100) * width);
-  const empty = width - filled;
-  const color = scoreColor(score);
-  return color("█".repeat(filled)) + chalk.dim("░".repeat(empty));
+// ── AgentsView status ──────────────────────────────────────────────
+
+/**
+ * Render an AgentsView status line for the report footer.
+ */
+export function renderAgentsViewStatus(available: boolean): string {
+  if (available) {
+    return chalk.dim(
+      "  📊 AgentsView connected — session data checks active.",
+    );
+  }
+  const border =
+    "───────────────────────────────────────────────────────────";
+  return [
+    "",
+    chalk.yellow(`  ┌${border}┐`),
+    chalk.yellow("  │") +
+      chalk.bold.yellow("  5 session checks skipped") +
+      chalk.yellow(
+        " — AgentsView not installed         │",
+      ),
+    chalk.yellow("  │") +
+      chalk.dim(
+        "  Unlock Tier 2: model spend, cache efficiency,",
+      ) +
+      chalk.yellow("                │"),
+    chalk.yellow("  │") +
+      chalk.dim(
+        "  context bloat, session length & subagent cost tracking.",
+      ) +
+      chalk.yellow("      │"),
+    chalk.yellow("  │") +
+      "  " +
+      chalk.cyan("https://github.com/srosro/agentsview") +
+      chalk.yellow("                         │"),
+    chalk.yellow(`  └${border}┘`),
+  ].join("\n");
 }
 
-function scoreColor(score: number): chalk.ChalkInstance {
-  if (score >= 80) return chalk.green;
-  if (score >= 60) return chalk.yellow;
-  return chalk.red;
+// ── Snapshot comparison ────────────────────────────────────────────
+
+/**
+ * Render a snapshot comparison to the terminal.
+ */
+export function renderSnapshotComparison(
+  comp: SnapshotComparison,
+): string {
+  const lines: string[] = [];
+
+  lines.push("");
+  lines.push(chalk.bold("  Snapshot Comparison"));
+  lines.push(
+    chalk.dim(
+      `  ${comp.before.name} (${comp.before.timestamp.split("T")[0]}) → ${comp.after.name} (${comp.after.timestamp.split("T")[0]})`,
+    ),
+  );
+  lines.push("");
+
+  // Score delta
+  const deltaColor = comp.scoreDelta >= 0 ? chalk.green : chalk.red;
+  const deltaSign = comp.scoreDelta >= 0 ? "+" : "";
+  lines.push(
+    `  Score: ${comp.before.score}/100 → ${comp.after.score}/100 ${deltaColor(`(${deltaSign}${comp.scoreDelta})`)}`,
+  );
+  lines.push("");
+
+  // Category deltas
+  for (const cat of comp.categoryDeltas) {
+    const cDelta = cat.delta;
+    const cColor = cDelta >= 0 ? chalk.green : chalk.red;
+    const cSign = cDelta >= 0 ? "+" : "";
+    lines.push(
+      `  ${padRight(cat.name, 20)} ${cat.before} → ${cat.after} ${cColor(`(${cSign}${cDelta})`)}`,
+    );
+  }
+
+  // Cost delta
+  if (comp.costDelta) {
+    const cd = comp.costDelta;
+    lines.push("");
+    lines.push(chalk.bold("  Cost Changes"));
+
+    const tokDelta = cd.tokensDelta;
+    const tokColor = tokDelta <= 0 ? chalk.green : chalk.red;
+    const tokSign = tokDelta <= 0 ? "" : "+";
+    lines.push(
+      `  Avg daily tokens: ${tokColor(`${tokSign}${formatTokens(cd.avgDailyDelta)}`)}`,
+    );
+    lines.push(
+      `  Cache hit ratio:  ${cd.cacheRatioDelta >= 0 ? chalk.green(`+${(cd.cacheRatioDelta * 100).toFixed(1)}%`) : chalk.red(`${(cd.cacheRatioDelta * 100).toFixed(1)}%`)}`,
+    );
+    lines.push(
+      `  Opus usage:       ${cd.opusPctBefore.toFixed(0)}% → ${cd.opusPctAfter.toFixed(0)}%`,
+    );
+  }
+
+  lines.push("");
+  return lines.join("\n");
 }
 
-function padRight(str: string, len: number): string {
-  return str + " ".repeat(Math.max(0, len - str.length));
+/**
+ * Render snapshot details.
+ */
+export function renderSnapshotSaved(
+  name: string,
+  filepath: string,
+  score: number,
+): string {
+  return [
+    "",
+    chalk.green(`  ✓ Snapshot "${name}" saved`),
+    chalk.dim(`    Score: ${score}/100`),
+    chalk.dim(`    Path: ${filepath}`),
+    "",
+  ].join("\n");
 }
+
+// ── Trend analysis ─────────────────────────────────────────────────
+
+/**
+ * Render trend analysis to the terminal.
+ */
+export function renderTrends(trends: TrendAnalysis): string {
+  const lines: string[] = [];
+
+  lines.push("");
+  lines.push(chalk.bold("  Usage Trends"));
+  lines.push(
+    chalk.dim(
+      `  Period: ${trends.period.start} → ${trends.period.end} (${trends.period.days} days)`,
+    ),
+  );
+  lines.push("");
+
+  // Overview
+  lines.push(`  Total tokens:    ${formatTokens(trends.totalTokens)}`);
+  lines.push(
+    `  Avg daily:       ${formatTokens(trends.avgDailyTokens)} ${trendArrow(trends.dailyTrend)}`,
+  );
+  lines.push(
+    `  Cache hit rate:  ${(trends.cacheEfficiency.ratio * 100).toFixed(0)}% ${trendArrow(trends.cacheEfficiency.trend === "improving" ? "decreasing" : trends.cacheEfficiency.trend === "declining" ? "increasing" : "stable")}`,
+  );
+  lines.push("");
+
+  // Model breakdown
+  lines.push(chalk.bold("  Model Breakdown"));
+  for (const m of trends.modelBreakdown) {
+    const bar = renderBar(m.pct, 15);
+    lines.push(
+      `  ${padRight(m.model, 10)} ${bar} ${m.pct.toFixed(0)}% ${chalk.dim(`(${formatTokens(m.tokens)} tokens, ~$${m.estimatedCost.toFixed(2)})`)}`,
+    );
+  }
+  lines.push("");
+
+  // Recommendations
+  if (trends.recommendations.length > 0) {
+    lines.push(chalk.bold("  Recommendations"));
+    for (const rec of trends.recommendations) {
+      const icon =
+        rec.priority === "high"
+          ? chalk.red("!")
+          : rec.priority === "medium"
+            ? chalk.yellow("→")
+            : chalk.dim("·");
+      lines.push(`  ${icon} ${rec.message}`);
+    }
+    lines.push("");
+  }
+
+  return lines.join("\n");
+}
+
+function trendArrow(trend: string): string {
+  if (trend === "increasing") return chalk.red("↑");
+  if (trend === "decreasing") return chalk.green("↓");
+  return chalk.dim("→");
+}
+
+function formatTokens(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${Math.round(n / 1_000)}K`;
+  return String(Math.round(n));
+}
+
+// ── Agent discovery ────────────────────────────────────────────────
 
 /**
  * Render a summary of discovered agents.

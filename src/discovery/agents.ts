@@ -7,7 +7,7 @@ export interface AgentDefinition {
 
 /**
  * Registry of known AI coding agents and their configuration paths.
- * Sprint 1 focuses on Claude Code with basic entries for other major agents.
+ * 16 agents matching AgentsView's supported list.
  */
 export const AGENT_REGISTRY: AgentDefinition[] = [
   {
@@ -94,6 +94,54 @@ export const AGENT_REGISTRY: AgentDefinition[] = [
     configPaths: [
       "<project>/AGENTS.md",
       "~/.ampcli/",
+    ],
+  },
+  {
+    id: "continue",
+    name: "Continue",
+    configPaths: [
+      "~/.continue/",
+      "<project>/.continue/",
+      "<project>/.continuerc.json",
+    ],
+  },
+  {
+    id: "tabnine",
+    name: "Tabnine",
+    configPaths: [
+      "~/.tabnine/",
+    ],
+  },
+  {
+    id: "sourcegraph-cody",
+    name: "Sourcegraph Cody",
+    configPaths: [
+      "~/.cody/",
+      "<project>/.cody/",
+    ],
+  },
+  {
+    id: "void",
+    name: "Void",
+    configPaths: [
+      "<project>/.void/",
+      "<project>/.voidrules",
+    ],
+  },
+  {
+    id: "goose",
+    name: "Goose (Block)",
+    configPaths: [
+      "~/.config/goose/",
+      "<project>/.goose/",
+    ],
+  },
+  {
+    id: "zed-assistant",
+    name: "Zed Assistant",
+    configPaths: [
+      "~/.config/zed/settings.json",
+      "<project>/.zed/settings.json",
     ],
   },
 ];

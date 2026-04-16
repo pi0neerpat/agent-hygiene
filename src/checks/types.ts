@@ -1,4 +1,6 @@
-export type Tier = "auto" | "semi-auto" | "advisory";
+import type { AgentsViewData } from "../tracking/agentsview.js";
+
+export type Tier = "auto" | "session" | "semi-auto" | "advisory";
 export type Category = "context" | "cost" | "habits" | "structure";
 
 export interface CheckResult {
@@ -35,6 +37,8 @@ export interface ScanContext {
   listDir(path: string): Promise<string[]>;
   /** Glob files from project root */
   glob(pattern: string): Promise<string[]>;
+  /** AgentsView usage data (null if agentsview not installed) */
+  agentsViewData: AgentsViewData | null;
 }
 
 export interface DiscoveredAgent {

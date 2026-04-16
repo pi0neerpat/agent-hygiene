@@ -47,12 +47,36 @@ export function resolvePath(base: string, path: string): string {
 /**
  * Glob files from a base directory.
  */
+/**
+ * Directories to always exclude from code scanning.
+ */
+const IGNORE_DIRS = [
+  "node_modules",
+  "dist",
+  "build",
+  "out",
+  ".next",
+  ".nuxt",
+  ".git",
+  "coverage",
+  "__snapshots__",
+  ".yarn",
+  "vendor",
+];
+
+/**
+ * Glob files from a base directory, excluding common non-source directories.
+ */
 export async function globFiles(
   pattern: string,
   cwd: string,
 ): Promise<string[]> {
   try {
-    return await tinyGlob([pattern], { cwd, absolute: true });
+    return await tinyGlob([pattern], {
+      cwd,
+      absolute: true,
+      ignore: IGNORE_DIRS.map((d) => `**/${d}/**`),
+    });
   } catch {
     return [];
   }

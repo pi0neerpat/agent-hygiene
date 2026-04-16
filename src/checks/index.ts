@@ -8,12 +8,30 @@ import { rulesStructureCheck } from "./auto/rules-structure.js";
 import { skillsUsageCheck } from "./auto/skills-usage.js";
 import { mcpToolSearchCheck } from "./auto/mcp-tool-search.js";
 import { mergeTinyRulesCheck } from "./auto/merge-tiny-rules.js";
+import { modelSelectionCheck } from "./auto/model-selection.js";
+import { settingsSchemaCheck } from "./auto/settings-schema.js";
+
+// Session checks (Tier 2) — requires AgentsView
+import { opusOveruseCheck } from "./session/opus-overuse.js";
+import { contextBloatCheck } from "./session/context-bloat.js";
+import { cacheMissRateCheck } from "./session/cache-miss-rate.js";
+import { sessionLengthCheck } from "./session/session-length.js";
+import { subagentCostCheck } from "./session/subagent-cost.js";
+
+// Advisory checks (Tier 3)
+import { clearBetweenTasksCheck } from "./advisory/clear-between-tasks.js";
+import { btwUsageCheck } from "./advisory/btw-usage.js";
+import { effortLevelCheck } from "./advisory/effort-level.js";
+import { subagentsResearchCheck } from "./advisory/subagents-research.js";
+import { batchApiCheck } from "./advisory/batch-api.js";
+import { promptCachingCheck } from "./advisory/prompt-caching.js";
+import { opusplanModeCheck } from "./advisory/opusplan-mode.js";
 
 /**
  * All registered checks, in order of execution.
  */
 export const ALL_CHECKS: Check[] = [
-  // Tier 1: Auto-detectable
+  // Tier 1: Auto-detectable (config files + env vars)
   claudeignoreCheck,
   autocompactCheck,
   subagentModelCheck,
@@ -22,6 +40,24 @@ export const ALL_CHECKS: Check[] = [
   skillsUsageCheck,
   mcpToolSearchCheck,
   mergeTinyRulesCheck,
+  modelSelectionCheck,
+  settingsSchemaCheck,
+
+  // Tier 2: Session data (AgentsView)
+  opusOveruseCheck,
+  contextBloatCheck,
+  cacheMissRateCheck,
+  sessionLengthCheck,
+  subagentCostCheck,
+
+  // Tier 3: Advisory (habit-based recommendations)
+  clearBetweenTasksCheck,
+  btwUsageCheck,
+  effortLevelCheck,
+  subagentsResearchCheck,
+  batchApiCheck,
+  promptCachingCheck,
+  opusplanModeCheck,
 ];
 
 export interface CheckRunResult {
@@ -39,6 +75,15 @@ export async function runChecks(
   const results: CheckRunResult[] = [];
 
   for (const check of checks) {
+    // Skip session checks when AgentsView has no usable data
+    if (
+      check.tier === "session" &&
+      (!ctx.agentsViewData?.available ||
+        ctx.agentsViewData.dailyUsage.length === 0)
+    ) {
+      continue;
+    }
+
     // Only run checks that apply to at least one discovered agent
     const applicable = check.agents.some((agentId) => {
       const agent = ctx.agents.get(agentId);
