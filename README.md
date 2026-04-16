@@ -6,7 +6,7 @@ Your agents are dirty, inefficient, and wasting resources.
 
 Clean your agents -> Change your habits -> Save the world 🌍
 
-LeanMaxxing Leaderboard coming soon.
+_Leaderboard soon?_
 
 ## Quick Start
 
@@ -14,7 +14,7 @@ LeanMaxxing Leaderboard coming soon.
 npx agent-hygiene scan
 ```
 
-Let agents help you clean using included prompts.
+Let agents help you clean w/ exact prompts.
 
 ```bash
 npx agent-hygiene scan --fix

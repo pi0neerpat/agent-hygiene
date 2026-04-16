@@ -31,6 +31,8 @@ export interface Recommendation {
   priority: "high" | "medium" | "low";
   message: string;
   estimatedSavings: string;
+  /** When true, this is the rollup savings summary — render with emphasis. */
+  isSummary?: boolean;
 }
 
 // ── Pricing (approximate $/1M tokens) ──────────────────────────────
@@ -249,6 +251,7 @@ function generateRecommendations(
       priority: "low",
       message: `Estimated total spend: $${totalCost.toFixed(2)} over ${data.dailyUsage.length} days. Implementing above recommendations could save ~$${totalSaving.toFixed(2)}`,
       estimatedSavings: `~$${totalSaving.toFixed(2)}/period`,
+      isSummary: true,
     });
   }
 

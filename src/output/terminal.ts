@@ -371,7 +371,11 @@ function renderInsights(
     return lines.join("\n");
   }
 
-  for (const rec of trends.recommendations) {
+  // Separate the summary recommendation from actionable ones
+  const actionRecs = trends.recommendations.filter((r) => !r.isSummary);
+  const summaryRec = trends.recommendations.find((r) => r.isSummary);
+
+  for (const rec of actionRecs) {
     const icon =
       rec.priority === "high"
         ? chalk.red("!")
@@ -379,6 +383,13 @@ function renderInsights(
           ? chalk.yellow("→")
           : chalk.dim("·");
     lines.push(`     ${icon} ${rec.message}`);
+  }
+
+  if (summaryRec) {
+    lines.push("");
+    lines.push(
+      `     ${chalk.green.bold("★")} ${chalk.green.bold(summaryRec.message)}`,
+    );
   }
 
   return lines.join("\n");
