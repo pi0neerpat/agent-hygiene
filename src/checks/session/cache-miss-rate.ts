@@ -20,10 +20,11 @@ export const cacheMissRateCheck: Check = {
   weight: 6,
   impact: "med",
   fixPrompt: (_ctx, result) =>
-    `${result.message}. Cached input tokens cost 90% less than uncached ones. ` +
-    `Ensure the latest Anthropic SDK version is installed — it supports automatic prompt caching. ` +
-    `Keep system prompts and CLAUDE.md stable across turns, as frequent changes invalidate the cache. ` +
-    `For direct API usage, add cache_control breakpoints to reused system messages.`,
+    `I ran agent-hygiene and it flagged: ${result.message}. Cached input tokens cost 90% less than uncached ones.\n\n` +
+    `Could you help improve my cache efficiency? I'd like you to:\n` +
+    `1. Look at the \`@anthropic-ai/sdk\` version pinned in my package.json — recent versions support automatic prompt caching. Don't upgrade anything yourself; if you need to check what's current on npm, tell me to run \`! npm view @anthropic-ai/sdk version\` and I'll paste the result back.\n` +
+    `2. Review CLAUDE.md and my system prompts for anything that might be changing frequently across turns, since that would invalidate the cache.\n` +
+    `3. If I'm using the API directly, suggest where to add cache_control breakpoints to reused system messages.`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     const early = checkSessionDataAvailable(ctx);

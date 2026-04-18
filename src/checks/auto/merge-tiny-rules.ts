@@ -13,9 +13,9 @@ export const mergeTinyRulesCheck: Check = {
   weight: 4,
   impact: "low",
   fixPrompt: (_ctx, result) =>
-    `${result.message}. Each file incurs per-file loading overhead, so consolidating related rules reduces context waste. ` +
-    `Merge small rule files in .claude/rules/ that cover related topics into fewer, larger files. ` +
-    `Group by domain — e.g. merge all testing-related rules into one file, all API conventions into another.`,
+    `I ran agent-hygiene and it flagged: ${result.message}. Each file incurs per-file loading overhead, so consolidating related rules reduces context waste.\n\n` +
+    `Could you merge the small rule files in .claude/rules/ that cover related topics into fewer, larger files? ` +
+    `Please group by domain — for example, merging all testing-related rules into one file and all API conventions into another.`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     const rulesDir = join(ctx.projectDir, ".claude", "rules");

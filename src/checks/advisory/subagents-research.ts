@@ -1,4 +1,16 @@
 import type { Check, ScanContext, CheckResult } from "../types.js";
+import { join } from "path";
+
+const SUBAGENT_HINTS = [
+  /\bsub[-\s]?agent/i,
+  /\bAgent\s+tool\b/,
+  /\bTask\s+tool\b/,
+  /delegat\w+\s+(?:codebase\s+)?(?:exploration|research|pattern)/i,
+];
+
+function mentionsSubagentGuidance(content: string): boolean {
+  return SUBAGENT_HINTS.some((p) => p.test(content));
+}
 
 export const subagentsResearchCheck: Check = {
   id: "subagents-research",
@@ -6,18 +18,34 @@ export const subagentsResearchCheck: Check = {
   technique: 11,
   tier: "advisory",
   category: "habits",
-  agents: ["claude-code"],
+  agents: ["claude-code", "codex"],
   estimatedSavings: "Subagents use separate context, saving main window tokens",
   weight: 4,
   impact: "low",
-  fixPrompt: `Subagents run in separate context windows with cheaper models (when CLAUDE_CODE_SUBAGENT_MODEL is set), keeping the main session lean. Add guidance to CLAUDE.md: "Delegate codebase exploration, pattern searches, and research questions to subagents using the Agent tool." This reduces main session token costs and preserves context for the primary task.`,
+  fixPrompt: `I ran agent-hygiene and it flagged that there's no subagent delegation guidance in my rules files. Subagents run in separate context windows, keeping the main session lean.\n\nBefore you make changes, please ask me:\n1. Should this guidance live in CLAUDE.md, AGENTS.md, or both (if both exist)?\n2. Are there any project-specific guardrails on when NOT to use subagents (e.g. tasks requiring full repo context)?\n\nOnce I've answered, please add a short rule to the chosen file(s), placed under an existing workflow/conventions section if one exists. Example wording:\n"Delegate codebase exploration, pattern searches, and research questions to subagents (Agent tool / Task tool). Keep the main session focused on synthesis and implementation."`,
 
-  async run(_ctx: ScanContext): Promise<CheckResult> {
+  async run(ctx: ScanContext): Promise<CheckResult> {
+    const files = [
+      join(ctx.projectDir, "CLAUDE.md"),
+      join(ctx.projectDir, "AGENTS.md"),
+      join(ctx.homeDir, ".claude", "CLAUDE.md"),
+    ];
+
+    for (const path of files) {
+      const content = await ctx.readFile(path);
+      if (content && mentionsSubagentGuidance(content)) {
+        return {
+          passed: true,
+          message: `Subagent delegation guidance found in ${path}`,
+        };
+      }
+    }
+
     return {
       passed: false,
-      message: "Use subagents for exploration and research tasks",
+      message: "No subagent delegation guidance found in CLAUDE.md or AGENTS.md",
       details:
-        "When exploring a codebase or researching a question, use the Agent tool or ask Claude to delegate. Subagents operate in separate context windows (with cheaper models if SUBAGENT_MODEL is set), keeping your main session focused.",
+        "When exploring a codebase or researching a question, use the Agent/Task tool to delegate. Subagents run in separate context windows, keeping your main session focused.",
     };
   },
 };

@@ -139,23 +139,33 @@ function renderHeader(
     chips.push(`${dot} ${agent.name}`);
   }
 
-  // Count failing / fixable checks (loss-framing)
+  // Count failing / fixable checks (loss-framing).
+  // Exclude informational checks — they're hints, not issues.
   const failCount = score.categories.reduce(
-    (n, cat) => n + cat.checks.filter((c) => !c.result.passed).length,
+    (n, cat) =>
+      n +
+      cat.checks.filter(
+        (c) => !c.result.passed && !c.check.informational,
+      ).length,
     0,
   );
   const fixableCount = score.categories.reduce(
     (n, cat) =>
       n +
       cat.checks.filter(
-        (c) => !c.result.passed && (c.check.fix || c.check.fixPrompt),
+        (c) =>
+          !c.result.passed &&
+          !c.check.informational &&
+          (c.check.fix || c.check.fixPrompt),
       ).length,
     0,
   );
   const autoFixCount = score.categories.reduce(
     (n, cat) =>
       n +
-      cat.checks.filter((c) => !c.result.passed && c.check.fix).length,
+      cat.checks.filter(
+        (c) => !c.result.passed && !c.check.informational && c.check.fix,
+      ).length,
     0,
   );
 

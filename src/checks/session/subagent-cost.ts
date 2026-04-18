@@ -26,9 +26,10 @@ export const subagentCostCheck: Check = {
   weight: 7,
   impact: "high",
   fixPrompt: (_ctx, result) =>
-    `${result.message}. Routing subagents to cheaper models saves 60-80% on exploration tasks. ` +
-    `Set CLAUDE_CODE_SUBAGENT_MODEL=claude-haiku-4-5-20251001 in ~/.claude/settings.json or the shell profile. ` +
-    `Add guidance to CLAUDE.md to delegate exploration and codebase searches to subagents rather than doing them in the main context.`,
+    `I ran agent-hygiene and it flagged: ${result.message}. Routing subagents to cheaper models saves 60-80% on exploration tasks.\n\n` +
+    `Could you help me fix this? I'd like you to:\n` +
+    `1. Set "CLAUDE_CODE_SUBAGENT_MODEL": "claude-haiku-4-5-20251001" in ~/.claude/settings.json.\n` +
+    `2. Add a note to CLAUDE.md encouraging delegation of exploration and codebase searches to subagents rather than handling them in the main context.`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     const early = checkSessionDataAvailable(ctx);

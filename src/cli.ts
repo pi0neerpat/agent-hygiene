@@ -26,4 +26,10 @@ registerBadgeCommand(program);
 registerProfileCommand(program);
 registerHistoryCommand(program);
 
+// Zero-arg invocation (`agent-hygiene` / `npx agent-hygiene`) defaults to
+// the interactive `scan --fix` flow.
+if (process.argv.length <= 2) {
+  process.argv.push("scan", "--fix");
+}
+
 program.parse();

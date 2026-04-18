@@ -13,7 +13,7 @@ export const mcpToolSearchCheck: Check = {
   estimatedSavings: "Reduces initial tool schema loading by deferring unused MCP tools",
   weight: 5,
   impact: "med",
-  fixPrompt: `Deferring MCP tool schemas avoids loading all definitions upfront, reducing initial context overhead. Set CLAUDE_CODE_ENABLE_TOOL_SEARCH=true in the shell profile (~/.zshrc or ~/.bashrc), or add "toolSearch": true to ~/.claude/settings.json.`,
+  fixPrompt: `I ran agent-hygiene and it flagged that MCP tool search deferral isn't enabled. Deferring MCP tool schemas avoids loading all definitions upfront, which reduces initial context overhead.\n\nCould you enable this by adding \`"toolSearch": true\` to ~/.claude/settings.json? Please stick to the settings.json edit — don't write to ~/.zshrc or other shell profiles on my behalf. If settings.json won't work for some reason, tell me the exact line to add to my shell rc and I'll paste it in myself.`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     // Check if user has custom MCP servers configured

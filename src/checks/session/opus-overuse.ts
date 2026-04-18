@@ -32,9 +32,9 @@ export const opusOveruseCheck: Check = {
   weight: 8,
   impact: "high",
   fixPrompt: (_ctx, result) =>
-    `${result.message}. Default to Sonnet for routine tasks: file edits, simple refactors, test writing, and boilerplate generation. ` +
-    `Reserve Opus for architecture decisions, complex debugging, and novel problem-solving. ` +
-    `Check settings and CLAUDE.md for model preferences that should be updated.`,
+    `I ran agent-hygiene and it flagged: ${result.message}.\n\n` +
+    `I'd like to shift routine work to Sonnet — file edits, simple refactors, test writing, and boilerplate generation — and reserve Opus for architecture decisions, complex debugging, and novel problem-solving.\n\n` +
+    `Could you check my settings files and CLAUDE.md for any model preferences that should be updated to reflect this?`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     const early = checkSessionDataAvailable(ctx);

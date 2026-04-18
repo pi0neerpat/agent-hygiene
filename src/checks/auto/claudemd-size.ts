@@ -12,9 +12,11 @@ export const claudemdSizeCheck: Check = {
   weight: 7,
   impact: "high",
   fixPrompt: (_ctx, result) =>
-    `${result.message}. Large instruction files inflate every message's token cost. ` +
-    `Reduce CLAUDE.md to under 80 lines: extract domain-specific workflows, step-by-step instructions, and large code blocks into Claude Code skills (~/.claude/skills/) or path-scoped rules (.claude/rules/). ` +
-    `Keep ~/.claude/CLAUDE.md under 15 lines with only cross-project settings.`,
+    `I ran agent-hygiene and it flagged: ${result.message}. Large instruction files inflate every message's token cost.\n\n` +
+    `I'd like to trim this down. Could you help by:\n` +
+    `- Extracting domain-specific workflows, step-by-step instructions, and large code blocks into Claude Code skills (~/.claude/skills/) or path-scoped rules (.claude/rules/) so they only load when relevant.\n` +
+    `- Reducing the project CLAUDE.md to under 80 lines.\n` +
+    `- Keeping ~/.claude/CLAUDE.md under 15 lines with only cross-project settings.`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     const projectClaudeMd = await ctx.readFile(

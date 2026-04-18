@@ -25,26 +25,26 @@ export interface OverallScore {
  */
 export function calculateScore(results: CheckRunResult[]): OverallScore {
   const categories: CategoryScore[] = CATEGORIES.map((cat) => {
-    const catChecks = results.filter(
-      (r) => r.check.category === cat.id,
-    );
+    const catChecks = results.filter((r) => r.check.category === cat.id);
+    // Informational checks are rendered but excluded from scoring.
+    const scored = catChecks.filter((r) => !r.check.informational);
 
-    if (catChecks.length === 0) {
+    if (scored.length === 0) {
       return {
         category: cat,
-        score: 100, // No checks = no issues
+        score: 100, // No scored checks = no issues
         grade: "A+",
         passed: 0,
         total: 0,
-        checks: [],
+        checks: catChecks,
       };
     }
 
-    const totalWeight = catChecks.reduce(
+    const totalWeight = scored.reduce(
       (sum, r) => sum + r.check.weight,
       0,
     );
-    const passedWeight = catChecks.reduce((sum, r) => {
+    const passedWeight = scored.reduce((sum, r) => {
       if (r.result.passed) return sum + r.check.weight;
       // Session/semi-auto checks with low confidence get partial credit
       if (
@@ -61,14 +61,14 @@ export function calculateScore(results: CheckRunResult[]): OverallScore {
     }, 0);
 
     const score = Math.round((passedWeight / totalWeight) * 100);
-    const passed = catChecks.filter((r) => r.result.passed).length;
+    const passed = scored.filter((r) => r.result.passed).length;
 
     return {
       category: cat,
       score,
       grade: scoreToGrade(score),
       passed,
-      total: catChecks.length,
+      total: scored.length,
       checks: catChecks,
     };
   });

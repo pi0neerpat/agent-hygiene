@@ -69,4 +69,11 @@ export interface Check {
    *  Can be a static string or a function that receives scan context and check
    *  result for dynamic, context-aware prompts. */
   fixPrompt?: string | ((ctx: ScanContext, result: CheckResult) => string);
+  /** If true, the check still runs in scan but is skipped in --fix mode.
+   *  Use for habit-only recommendations that aren't prompt-fixable. */
+  hideFromFix?: boolean;
+  /** If true, the check is a hint-only nudge: it still runs and shows in
+   *  scan output, but is excluded from scoring AND skipped in --fix.
+   *  Use for recommendations we cannot yet measure (e.g. /clear habit). */
+  informational?: boolean;
 }

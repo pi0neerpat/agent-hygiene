@@ -12,12 +12,12 @@ import { modelSelectionCheck } from "./auto/model-selection.js";
 import { settingsSchemaCheck } from "./auto/settings-schema.js";
 import { agentsMdSizeCheck } from "./auto/agentsmd-size.js";
 import { codexSetupCheck } from "./auto/codex-setup.js";
+import { rulesVerbosityCheck } from "./auto/rules-verbosity.js";
 
 // Session checks (Tier 2) — requires AgentsView
 import { opusOveruseCheck } from "./session/opus-overuse.js";
 import { contextBloatCheck } from "./session/context-bloat.js";
 import { cacheMissRateCheck } from "./session/cache-miss-rate.js";
-import { sessionLengthCheck } from "./session/session-length.js";
 import { subagentCostCheck } from "./session/subagent-cost.js";
 
 // Advisory checks (Tier 3)
@@ -25,10 +25,7 @@ import { clearBetweenTasksCheck } from "./advisory/clear-between-tasks.js";
 import { btwUsageCheck } from "./advisory/btw-usage.js";
 import { effortLevelCheck } from "./advisory/effort-level.js";
 import { subagentsResearchCheck } from "./advisory/subagents-research.js";
-import { batchApiCheck } from "./advisory/batch-api.js";
-import { promptCachingCheck } from "./advisory/prompt-caching.js";
 import { opusplanModeCheck } from "./advisory/opusplan-mode.js";
-import { sonnetDefaultCheck } from "./advisory/sonnet-default.js";
 
 /**
  * All registered checks, in order of execution.
@@ -46,13 +43,13 @@ export const ALL_CHECKS: Check[] = [
   modelSelectionCheck,
   settingsSchemaCheck,
   agentsMdSizeCheck,
+  rulesVerbosityCheck,
   codexSetupCheck,
 
   // Tier 2: Session data (AgentsView)
   opusOveruseCheck,
   contextBloatCheck,
   cacheMissRateCheck,
-  sessionLengthCheck,
   subagentCostCheck,
 
   // Tier 3: Advisory (habit-based recommendations)
@@ -60,10 +57,7 @@ export const ALL_CHECKS: Check[] = [
   btwUsageCheck,
   effortLevelCheck,
   subagentsResearchCheck,
-  batchApiCheck,
-  promptCachingCheck,
   opusplanModeCheck,
-  sonnetDefaultCheck,
 ];
 
 export interface CheckRunResult {

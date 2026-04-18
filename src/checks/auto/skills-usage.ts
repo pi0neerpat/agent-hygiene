@@ -22,7 +22,7 @@ export const skillsUsageCheck: Check = {
   estimatedSavings: "Skills only load when triggered, saving context",
   weight: 6,
   impact: "med",
-  fixPrompt: `Skills load on-demand when triggered, unlike CLAUDE.md which is injected into every message. Scan CLAUDE.md for domain-specific knowledge blocks — code snippets, step-by-step workflows, user-interaction patterns, and imperative tool rules — and extract each into a skill file under ~/.claude/skills/. Give each skill a clear trigger description so it activates only when relevant.`,
+  fixPrompt: `I ran agent-hygiene and it flagged that CLAUDE.md contains domain-specific knowledge that would work better as skills. Skills load on-demand when triggered, unlike CLAUDE.md which is injected into every message.\n\nCould you scan CLAUDE.md for domain-specific knowledge blocks — code snippets, step-by-step workflows, user-interaction patterns, and imperative tool rules — and extract each into a skill file under ~/.claude/skills/? Please give each skill a clear trigger description so it activates only when relevant.`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     const claudeMd = await ctx.readFile(

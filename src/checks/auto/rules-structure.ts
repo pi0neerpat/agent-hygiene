@@ -11,7 +11,7 @@ export const rulesStructureCheck: Check = {
   estimatedSavings: "Only loads relevant rules per file, reducing context",
   weight: 6,
   impact: "med",
-  fixPrompt: `Path-scoped rules load only when editing matching files, reducing per-message context. Create a .claude/rules/ directory and add rule files named with glob patterns (e.g. "src__components.md" for src/components/ guidelines). Move file-type-specific conventions from CLAUDE.md into these scoped rules so they only load when relevant.`,
+  fixPrompt: `I ran agent-hygiene and it flagged that path-scoped rules aren't set up yet. Path-scoped rules load only when editing matching files, which keeps per-message context lean.\n\nBefore you make changes, please ask me:\n1. Which directories or file-types in this repo have their own conventions (e.g. src/components, api/, tests/)?\n2. Do any rules currently in CLAUDE.md (or AGENTS.md) only apply to a subset of files?\n3. Should the rules live under .claude/rules/ (Claude Code) or a different location for my toolchain?\n\nOnce I've answered, please create .claude/rules/ with glob-named rule files (e.g. "src__components.md" for src/components/ guidelines), and move the path-scoped sections we identify out of CLAUDE.md so they only load when matching files are edited.`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     const rulesDir = join(ctx.projectDir, ".claude", "rules");

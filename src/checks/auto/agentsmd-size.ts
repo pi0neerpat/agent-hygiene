@@ -16,9 +16,15 @@ export const agentsMdSizeCheck: Check = {
   weight: 7,
   impact: "high",
   fixPrompt: (_ctx, result) =>
-    `${result.message}. AGENTS.md is injected into every Codex message, so keeping it concise reduces per-message token cost. ` +
-    `Reduce AGENTS.md to under 80 lines: move detailed implementation guides, large code examples, and step-by-step workflows into separate referenced files. ` +
-    `Focus on high-level project conventions and key architectural decisions only.`,
+    `I ran agent-hygiene and it says: ${result.message}.\n\n` +
+    `AGENTS.md gets injected into every Codex message, so trimming it saves tokens per turn. I'd like to split the detailed content into per-topic docs.\n\n` +
+    `Before you make changes, please ask me:\n` +
+    `1. Do I already have a ./docs/ directory, or should we create one?\n` +
+    `2. Are there sections of AGENTS.md that MUST stay inline (non-negotiable conventions)?\n\n` +
+    `Once I've answered, please:\n` +
+    `1. Create ./docs/INDEX.md — a router listing each documentation file with a one-line "read this when…" hint so agents can pull files on demand.\n` +
+    `2. Move detailed implementation guides, large code examples, and step-by-step workflows out of AGENTS.md into separate files referenced from INDEX.md.\n` +
+    `3. Reduce AGENTS.md to a short pointer that references INDEX.md for deeper context, keeping only high-level conventions inline.`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     const projectAgentsMd = await ctx.readFile(

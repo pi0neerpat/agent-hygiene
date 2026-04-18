@@ -16,8 +16,10 @@ export const codexSetupCheck: Check = {
   weight: 5,
   impact: "med",
   fixPrompt: (_ctx, result) =>
-    `${result.message}. Create an AGENTS.md file in the project root with concise project conventions, key architecture decisions, and testing requirements — keep it under 80 lines. ` +
-    `If ~/.codex/ doesn't exist, run "codex" once to initialize the global config directory for sandbox settings and preferences.`,
+    `I ran agent-hygiene on my project and it flagged: ${result.message}.\n\n` +
+    `Could you help me set this up? I'd like you to:\n` +
+    `1. Draft an AGENTS.md for the project root (under 80 lines) covering the key conventions, architecture notes, and testing requirements you can infer from the codebase. Ask me to fill in anything that isn't obvious from the code.\n` +
+    `2. If ~/.codex/ doesn't exist, don't run \`codex\` yourself — just tell me to run \`! codex\` in the prompt (the \`!\` prefix runs it in this session so I can see the output and handle any interactive prompts directly).`,
 
   async run(ctx: ScanContext): Promise<CheckResult> {
     const issues: string[] = [];

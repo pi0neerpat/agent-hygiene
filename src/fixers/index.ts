@@ -113,8 +113,13 @@ export async function runFixMode(
   ctx: ScanContext,
 ): Promise<void> {
   // Collect all actionable failing checks
+  // (exclude hideFromFix and informational — both are hint-only)
   const actionable = results.filter(
-    (r) => !r.result.passed && (r.check.fix || r.check.fixPrompt),
+    (r) =>
+      !r.result.passed &&
+      !r.check.hideFromFix &&
+      !r.check.informational &&
+      (r.check.fix || r.check.fixPrompt),
   );
 
   if (actionable.length === 0) {
