@@ -26,6 +26,7 @@ import { btwUsageCheck } from "./advisory/btw-usage.js";
 import { effortLevelCheck } from "./advisory/effort-level.js";
 import { subagentsResearchCheck } from "./advisory/subagents-research.js";
 import { opusplanModeCheck } from "./advisory/opusplan-mode.js";
+import { interviewOnAmbiguityCheck } from "./advisory/interview-on-ambiguity.js";
 
 /**
  * All registered checks, in order of execution.
@@ -58,6 +59,7 @@ export const ALL_CHECKS: Check[] = [
   effortLevelCheck,
   subagentsResearchCheck,
   opusplanModeCheck,
+  interviewOnAmbiguityCheck,
 ];
 
 export interface CheckRunResult {

@@ -11,14 +11,10 @@ _LeanMaxxing Leaderboard soon?_
 ## Quick Start
 
 ```bash
-npx agent-hygiene scan
+npx agent-hygiene
 ```
 
 Let agents help you clean w/ exact prompts.
-
-```bash
-npx agent-hygiene scan --fix
-```
 
 <img src="https://github.com/pi0neerpat/agent-hygiene/blob/main/docs/demo-fix.png?raw=true" />
 
